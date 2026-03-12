@@ -1,68 +1,89 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@custom-variant landscape (@media (orientation: landscape));
+@custom-variant portrait (@media (orientation: portrait));
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  /* Brand colors */
+  --color-brand-primary: #3b82f6;
+  --color-brand-primary-hover: #60a5fa;
+  --color-brand-primary-disabled: #60a5fa;
+
+  /* Glass-morphism surfaces */
+  --color-glass-bg: rgba(0, 0, 0, 0.6);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Status colors */
+  --color-status-available: #22c55e;
+  --color-status-reserved: #f59e0b;
+  --color-status-sold: #ef4444;
+
+  /* Spacing scale (card & section padding) */
+  --spacing-card: 1.25rem;
+  --spacing-section: 1.5rem;
+  --spacing-header: 0.75rem;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+html {
+  background: black;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Glass surfaces */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+.lots-glass {
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(52px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15), 2px 2px 3px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+
+/* SVG interactive elements */
+@keyframes hotspotPulse {
+  0%, 100% { fill: rgba(255,255,255,0.1); stroke: rgba(255,255,255,0.4); }
+  50% { fill: rgba(255,255,255,0.2); stroke: rgba(255,255,255,0.7); }
+}
+.hotspot-pulse { animation: hotspotPulse 2s ease-in-out infinite; stroke-width: 2px; }
+
+/* Skip navigation */
+.skip-nav {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.skip-nav:focus {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.25rem;
+  background: #2563eb;
+  color: white;
+  font-size: 0.875rem;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
