@@ -37,6 +37,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const [activeView, setActiveView] = useState<ActiveView>('unit');
   const [contactOpen, setContactOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [planoIndex, setPlanoIndex] = useState(0);
 
   const homeUrl = getHomeUrl(data);
   const floorUrl = getBackUrl(data);
@@ -91,6 +92,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       setActiveView('unit');
       setMediaTab(tab);
       setGalleryIndex(0);
+      setPlanoIndex(0);
     }
   }, []);
 
@@ -110,8 +112,8 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   return (
     <div className="relative h-screen overflow-hidden bg-[#2A2A2A]">
       {/* Background — full-bleed image changes per tab */}
-      {mediaTab === 'gallery' && fichaImage && (
-        <img src={fichaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      {mediaTab === 'gallery' && fichaImages.length > 0 && (
+        <img src={fichaImages[planoIndex]?.url} alt="" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300" key={planoIndex} />
       )}
       {mediaTab === 'video' && galleryImages.length > 0 && (
         <img
@@ -144,6 +146,44 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
                 thumbnailUrl={thumbnailUrl}
                 onContact={() => setContactOpen(true)}
               />
+            </div>
+          )}
+
+          {/* Planos arrows + progress — when multiple fichas */}
+          {mediaTab === 'gallery' && fichaImages.length > 1 && (
+            <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-[22px]">
+              <div className="flex items-center gap-[21px]">
+                <button
+                  onClick={() => setPlanoIndex((i) => (i - 1 + fichaImages.length) % fichaImages.length)}
+                  className="w-[44px] h-[44px] rounded-[100px] flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+                  style={glassStyle}
+                  aria-label="Anterior"
+                >
+                  <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))' }}>
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setPlanoIndex((i) => (i + 1) % fichaImages.length)}
+                  className="w-[44px] h-[44px] rounded-[100px] flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+                  style={glassStyle}
+                  aria-label="Siguiente"
+                >
+                  <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))' }}>
+                    <polyline points="9 6 15 12 9 18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center gap-[4px]">
+                {fichaImages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-[3px] rounded-full transition-all duration-300 ${
+                      i === planoIndex ? 'w-[41px] bg-[#f2f2f2]' : 'w-[28px] bg-[rgba(234,234,234,0.45)]'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           )}
 

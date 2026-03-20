@@ -57,7 +57,9 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
   const activeData: ExplorerPageData =
     (siblingBundle && activeLayerId ? siblingBundle.siblingDataMap[activeLayerId] : null) ?? data;
 
-  const { project, currentLayer, children, currentPath, siblings, media } = activeData;
+  const { project, currentLayer, children, currentPath, siblings: rawSiblings, media } = activeData;
+  // Filter out tour layers from sibling navigation — they're not floors
+  const siblings = useMemo(() => rawSiblings.filter((s) => s.type !== 'tour'), [rawSiblings]);
   const basePath = `${currentPath.length > 0 ? '/' + currentPath.join('/') : ''}`;
   const svgUrl = currentLayer?.svgOverlayUrl ?? project.svgOverlayUrl;
   const currentLabel = project.layerLabels[currentLayer?.depth ?? -1] ?? '';

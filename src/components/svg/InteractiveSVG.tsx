@@ -128,7 +128,22 @@ export function InteractiveSVG({
     const listeners: ListenerEntry[] = [];
 
     entities.forEach((entity) => {
-      const element = svg.querySelector(`#${CSS.escape(entity.id)}`) as SVGElement;
+      let element = svg.querySelector(`#${CSS.escape(entity.id)}`) as SVGElement | null;
+      // Fallback: try suffix after last dash (e.g. "14-a" → "a"), then uppercase ("A")
+      if (!element && entity.id.includes('-')) {
+        const suffix = entity.id.split('-').pop()!;
+        element = svg.querySelector(`#${CSS.escape(suffix)}`) as SVGElement | null;
+        if (!element) {
+          element = svg.querySelector(`#${CSS.escape(suffix.toUpperCase())}`) as SVGElement | null;
+        }
+      }
+      // Fallback: try case-insensitive match
+      if (!element) {
+        element = svg.querySelector(`[id="${entity.id}" i]`) as SVGElement | null
+          ?? Array.from(svg.querySelectorAll('[id]')).find(
+            (el) => el.id.toLowerCase() === entity.id.toLowerCase()
+          ) as SVGElement | null;
+      }
       if (!element) {
         console.warn(`Element with id "${entity.id}" not found in SVG`);
         return;
