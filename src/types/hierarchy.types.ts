@@ -84,6 +84,17 @@ export interface Project {
   // SVG hotspot element IDs
   hotspotTowerId?: string;
   hotspotMarkerId?: string;
+
+  // Social media
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  youtube?: string;
+  tiktok?: string;
+  linkedin?: string;
+
+  // Appearance
+  accentColor?: string;
 }
 
 export interface Layer {

@@ -194,6 +194,11 @@ export default function App() {
         const projectData: RawProjectData = { rawProject, rawLayers, rawMedia, rawUnitTypes };
         setData(projectData);
 
+        // Apply accent color as CSS variable
+        if (rawProject.accent_color) {
+          document.documentElement.style.setProperty('--accent-color', rawProject.accent_color);
+        }
+
         // Phase 2: Preload assets (only if not already cached)
         const alreadyCached = (() => {
           try { return !!sessionStorage.getItem('preloaded:' + PROJECT_SLUG); } catch { return false; }

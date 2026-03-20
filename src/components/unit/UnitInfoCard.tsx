@@ -1,0 +1,178 @@
+import { useMemo } from 'react';
+import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car } from 'lucide-react';
+import type { Layer } from '@/types/hierarchy.types';
+import { getFeatureIcon } from '@/lib/constants/feature-icons';
+import { UnitStatusBadge } from './UnitStatusBadge';
+import { UnitFeatureRow } from './UnitFeatureRow';
+
+/*
+ * Figma "ficha" panel — exact CSS values from inspector:
+ *   Outer: 337×612 (612×337 rotated), rgba(214,214,214,0.45), luminosity, blur 50, rounded-28
+ *   Thumbnail: 337×170, border-radius 28 28 0 0
+ *   Inner card (Rectangle 36): ~290px wide, rgba(255,255,255,0.7), inset shadows, blur 14, rounded-20
+ *   Inner card padding: ~36px left, content positions relative to pill top-left
+ */
+
+const outerGlassStyle: React.CSSProperties = {
+  background: 'rgba(214, 214, 214, 0.45)',
+  backgroundBlendMode: 'luminosity',
+  backdropFilter: 'blur(50px)',
+  WebkitBackdropFilter: 'blur(50px)',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+  borderRadius: '28px',
+};
+
+const innerCardStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.7)',
+  boxShadow: 'inset 0px 0px 16px rgba(255, 255, 255, 0.05), inset 0px 4px 4px rgba(255, 255, 255, 0.15)',
+  backdropFilter: 'blur(14px)',
+  WebkitBackdropFilter: 'blur(14px)',
+  borderRadius: '20px',
+};
+
+const M2_TO_SQFT = 10.7639;
+const poppins = "'Poppins', system-ui, sans-serif";
+
+interface UnitInfoCardProps {
+  layer: Layer;
+  thumbnailUrl?: string;
+  onContact: () => void;
+}
+
+export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardProps) {
+  const {
+    label, status, unitTypeName, price,
+    area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
+  } = layer;
+
+  const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
+  const areaSqft = area && areaUnit !== 'ft2' ? Math.round(area * M2_TO_SQFT * 100) / 100 : null;
+
+  const priceFormatted = useMemo(() => {
+    if (!price || price <= 0) return null;
+    return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }, [price]);
+
+  const featureRows = useMemo(() => {
+    const rows: { icon: typeof Ruler; text: string }[] = [];
+
+    if (area && area > 0) {
+      rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
+    }
+    if (areaSqft) {
+      rows.push({ icon: Ruler, text: `Área Total ${areaSqft.toLocaleString('en-US', { minimumFractionDigits: 2 })} Sqft` });
+    }
+    if (bedrooms != null) {
+      rows.push({ icon: BedDouble, text: `${bedrooms} Recámara${bedrooms !== 1 ? 's' : ''}` });
+    }
+    if (bathrooms != null) {
+      rows.push({ icon: Bath, text: `${bathrooms} Baño${bathrooms !== 1 ? 's' : ''}` });
+    }
+    if (hasBalcony) {
+      rows.push({ icon: Fence, text: 'Balcón' });
+    }
+
+    if (features) {
+      for (const f of features) {
+        const iconName = f.icon?.toLowerCase() ?? '';
+        if (iconName === 'washing-machine' || f.text.toLowerCase().includes('lavander')) {
+          rows.push({ icon: WashingMachine, text: f.text });
+        } else if (iconName === 'parking-circle' || iconName === 'car' || f.text.toLowerCase().includes('parking') || f.text.toLowerCase().includes('cochera')) {
+          rows.push({ icon: Car, text: f.text });
+        } else {
+          rows.push({ icon: getFeatureIcon(f.icon), text: f.text });
+        }
+      }
+    }
+
+    return rows;
+  }, [area, areaLabel, areaSqft, bedrooms, bathrooms, hasBalcony, features]);
+
+  return (
+    <div className="w-[337px] flex-shrink-0 overflow-hidden" style={outerGlassStyle}>
+      {/* Figma: 337×170, border-radius 28px top corners */}
+      {thumbnailUrl && (
+        <div className="w-full h-[170px] overflow-hidden" style={{ borderRadius: '28px 28px 0 0' }}>
+          <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
+
+      {/* Inner white card — Figma: Rectangle 36, positioned with ~12px margin from outer edges */}
+      <div
+        className="mx-[12px] mb-[12px] mt-[12px] overflow-y-auto max-h-[420px] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+        style={innerCardStyle}
+      >
+        <div className="px-[24px] pt-[12px] pb-[16px]">
+          {/* Row 1: Label + Status — Figma: same top line */}
+          <div className="flex items-center justify-between">
+            <h2
+              className="text-[26px] font-medium leading-[39px] capitalize"
+              style={{ color: '#484848', fontFamily: poppins }}
+            >
+              {label}
+            </h2>
+            <UnitStatusBadge status={status} />
+          </div>
+
+          {/* Row 2: Model + Price — Figma: model left, price right */}
+          <div className="flex items-baseline justify-between">
+            {unitTypeName ? (
+              <p
+                className="text-[18px] font-medium leading-[27px] capitalize truncate min-w-0 mr-[8px]"
+                title={`Modelo ${unitTypeName}`}
+                style={{ color: '#757474', fontFamily: poppins }}
+              >
+                Modelo {unitTypeName}
+              </p>
+            ) : <span />}
+            {priceFormatted && (
+              <span
+                className="text-[24px] font-semibold leading-[36px] uppercase flex-shrink-0 whitespace-nowrap"
+                style={{ color: '#1A1A1A', fontFamily: poppins }}
+              >
+                {priceFormatted}
+              </span>
+            )}
+          </div>
+
+          {/* Instalaciones — Figma: Poppins 500 16px #484848, top:283 */}
+          {featureRows.length > 0 && (
+            <>
+              <h3
+                className="text-[16px] font-medium leading-[24px] capitalize mt-[12px] mb-[8px]"
+                style={{ color: '#484848', fontFamily: poppins }}
+              >
+                Instalaciones
+              </h3>
+              {/* Feature rows — Figma: icon at left:47 (offset ~11px from inner card left:36), text at left:75, 27px apart */}
+              <div className="flex flex-col gap-[6px]">
+                {featureRows.map((row, i) => (
+                  <UnitFeatureRow key={i} icon={row.icon} text={row.text} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Divider — Figma: Vector 16, 262px wide, opacity 0.14, 1px #A49F9F */}
+          <div className="my-[14px]">
+            <div style={{ borderTop: '1px solid #A49F9F', opacity: 0.14 }} />
+          </div>
+
+          {/* CTA — Figma: 254×42, bg #1A1A1A, rounded-69, Poppins 500 20px #FFFFFF */}
+          <button
+            onClick={onContact}
+            className="w-[254px] mx-auto h-[42px] flex items-center justify-center rounded-[69px] transition-opacity hover:opacity-90 outline-none"
+            style={{ background: '#1A1A1A' }}
+          >
+            <span
+              className="text-[20px] font-medium leading-[30px] capitalize"
+              style={{ color: '#FFFFFF', fontFamily: poppins }}
+            >
+              Solicitar Información
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

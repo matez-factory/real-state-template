@@ -24,13 +24,17 @@
   --spacing-header: 0.75rem;
 }
 
+:root {
+  --accent-color: transparent;
+}
+
 html {
   background: black;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Glass surfaces */

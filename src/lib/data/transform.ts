@@ -58,6 +58,13 @@ export interface RawProject {
   has_zoom_in: boolean;
   hotspot_tower_id: string | null;
   hotspot_marker_id: string | null;
+  accent_color: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  twitter: string | null;
+  youtube: string | null;
+  tiktok: string | null;
+  linkedin: string | null;
 }
 
 export interface RawLayer {
@@ -175,6 +182,13 @@ export function transformProject(raw: RawProject): Project {
     hasZoomIn: raw.has_zoom_in ?? false,
     hotspotTowerId: raw.hotspot_tower_id ?? 'tower',
     hotspotMarkerId: raw.hotspot_marker_id ?? 'marker',
+    accentColor: raw.accent_color ?? undefined,
+    instagram: raw.instagram || undefined,
+    facebook: raw.facebook || undefined,
+    twitter: raw.twitter || undefined,
+    youtube: raw.youtube || undefined,
+    tiktok: raw.tiktok || undefined,
+    linkedin: raw.linkedin || undefined,
   };
 }
 

@@ -4,11 +4,10 @@ import type { ExplorerPageData, Layer, SiblingExplorerBundle } from '@/types/hie
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
 import { InteractiveSVG } from '@/components/svg/InteractiveSVG';
 import { SiblingNavigator } from '@/components/navigation/SiblingNavigator';
-import { BrandingBadge } from '@/components/navigation/BrandingBadge';
 import { TopNav } from '@/components/navigation/TopNav';
+import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
 import { LocationView } from '@/components/navigation/LocationView';
-import { STATUS_DOT_CLASSES } from '@/lib/constants/status';
 import { preloadImage, preloadSvg } from '@/lib/preload';
 
 interface ExplorerViewProps {
@@ -30,7 +29,6 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
     setPrevDataLayerId(incomingId);
     setActiveLayerId(incomingId);
   }
-  const [mobileSiblingsOpen, setMobileSiblingsOpen] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>('map');
   const [contactOpen, setContactOpen] = useState(false);
   const mapScrollRef = useRef<HTMLDivElement>(null);
@@ -103,7 +101,6 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
       const path = [...currentPath.slice(0, -1), sibling.slug];
       navigate(`/${path.join('/')}`);
     }
-    setMobileSiblingsOpen(false);
   }, [activeLayerId, siblingBundle, currentPath, navigate]);
 
   const homeUrl = getHomeUrl(data);
@@ -153,14 +150,37 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
               </div>
             </div>
 
-            {showSiblings && (
-              <div className="absolute bottom-20 right-4 z-[55] lg:hidden landscape:bottom-4">
-                <button
-                  onClick={() => setMobileSiblingsOpen((o) => !o)}
-                  className="lots-glass px-4 py-2 text-sm text-white/90 hover:text-white rounded-full transition-colors outline-none"
+            {/* Mobile horizontal floor selector */}
+            {showSiblings && currentLayer && (
+              <div className="absolute bottom-16 left-0 right-0 z-[55] lg:hidden landscape:bottom-2 flex flex-col items-center">
+                <span className="text-[13px] text-white/70 font-light mb-1">{currentLabel}</span>
+                <div className="flex items-center gap-1 overflow-x-auto max-w-[90vw] px-2 py-1 rounded-[16px] [&::-webkit-scrollbar]:h-0"
+                  style={{
+                    background: 'rgba(214, 214, 214, 0.45)',
+                    backgroundBlendMode: 'luminosity' as const,
+                    backdropFilter: 'blur(50px)',
+                    WebkitBackdropFilter: 'blur(50px)',
+                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                  }}
                 >
-                  {currentLabel}es ↑
-                </button>
+                  {[...siblings].reverse().map((sibling) => {
+                    const isCurrent = sibling.id === (activeLayerId ?? currentLayer?.id);
+                    const shortLabel = sibling.label.replace(/^(piso|nivel|planta|n)\s*/i, '');
+                    return (
+                      <button
+                        key={sibling.id}
+                        onClick={() => handleSiblingSelect(sibling)}
+                        className={`flex-shrink-0 min-w-[36px] h-[36px] rounded-[10px] text-[14px] font-semibold transition-colors outline-none px-2 ${
+                          isCurrent
+                            ? 'bg-white text-[#484848]'
+                            : 'text-[#707070] hover:bg-white/30'
+                        }`}
+                      >
+                        {shortLabel}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </main>
@@ -168,12 +188,11 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
         {activeView === 'location' && <LocationView project={project} />}
       </div>
 
-      <BrandingBadge project={project} logos={logos} />
       <TopNav
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onContactOpen={() => setContactOpen(true)}
-        mapLabel="Niveles"
+        mapLabel="Plantas"
         showBack
         onBack={activeView === 'location' ? () => setActiveView('map') : () => navigate(backUrl)}
       />
@@ -184,47 +203,12 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
           currentLayerId={activeLayerId ?? currentLayer.id}
           label={currentLabel}
           onSelect={handleSiblingSelect}
+          projectName={project.name}
+          logoUrl={logos[0]?.url ?? undefined}
         />
       )}
 
-      {mobileSiblingsOpen && showSiblings && (
-        <div className="lg:hidden fixed inset-0 z-[55] flex flex-col justify-end">
-          <div className="flex-1" onClick={() => setMobileSiblingsOpen(false)} />
-          <div className="bg-black/70 backdrop-blur-md rounded-t-2xl max-h-[60vh] overflow-y-auto mx-2 mb-16 landscape:mb-2">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                {currentLabel}es
-              </span>
-              <button
-                onClick={() => setMobileSiblingsOpen(false)}
-                className="text-gray-400 hover:text-white text-sm"
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex flex-col py-1">
-              {[...siblings].reverse().map((sibling) => {
-                const isCurrent = sibling.id === (activeLayerId ?? currentLayer?.id);
-                return (
-                  <button
-                    key={sibling.id}
-                    onClick={() => handleSiblingSelect(sibling)}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors outline-none ${
-                      isCurrent
-                        ? 'bg-white/15 text-white font-semibold border-l-2 border-sky-400'
-                        : 'text-gray-400 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT_CLASSES[sibling.status]}`} />
-                    <span className="truncate">{sibling.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {activeView === 'map' && <SocialButtons project={project} />}
 
       <ContactModal
         project={project}

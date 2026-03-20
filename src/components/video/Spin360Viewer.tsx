@@ -23,6 +23,12 @@ interface Spin360ViewerProps {
   hotspotMarkerId?: string;
   onViewpointChange?: (id: string) => void;
   onTransitionChange?: (isTransitioning: boolean) => void;
+  /** Project name shown in the hotspot card */
+  projectName?: string;
+  /** Logo URL shown in the hotspot card */
+  projectLogoUrl?: string;
+  /** Accent color from project (used in hotspot card button) */
+  accentColor?: string;
 }
 
 export interface Spin360ViewerRef {
@@ -43,6 +49,9 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   hotspotMarkerId,
   onViewpointChange,
   onTransitionChange,
+  projectName,
+  projectLogoUrl,
+  accentColor,
 }: Spin360ViewerProps, ref: React.Ref<Spin360ViewerRef>) {
   const viewpointOrder = useMemo(() => {
     return media
@@ -58,10 +67,13 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   const [transitionVideoUrl, setTransitionVideoUrl] = useState<string | null>(null);
   const [entranceVideoUrl, setEntranceVideoUrl] = useState<string | null>(null);
   const [entranceVideoPlaying, setEntranceVideoPlaying] = useState(false);
-  const [entranceFadingOut] = useState(false);
-  const [tooltip, setTooltip] = useState<{ visible: boolean; x: number; y: number }>({
+  const [entranceFadingOut, setEntranceFadingOut] = useState(false);
+  const [hotspotCard, setHotspotCard] = useState<{ visible: boolean; x: number; y: number }>({
     visible: false, x: 0, y: 0,
   });
+  const hotspotHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hotspotCardRef = useRef<HTMLDivElement>(null);
+  const isMouseOverCard = useRef(false);
   const onVideoEndRef = useRef<(() => void) | null>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -258,6 +270,24 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
 
           const shapes = svg.querySelectorAll<SVGElement>('path, polygon, polyline, rect, ellipse');
 
+          /* Calculate hotspot center position on mount — needed for mobile always-visible card */
+          {
+            const containerRect = container.getBoundingClientRect();
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            shapes.forEach((s) => {
+              const r = s.getBoundingClientRect();
+              if (r.left < minX) minX = r.left;
+              if (r.top < minY) minY = r.top;
+              if (r.right > maxX) maxX = r.right;
+              if (r.bottom > maxY) maxY = r.bottom;
+            });
+            if (minX < Infinity) {
+              const cx = ((minX + maxX) / 2 - containerRect.left) / containerRect.width * 100;
+              const cy = ((minY + maxY) / 2 - containerRect.top) / containerRect.height * 100;
+              setHotspotCard((prev) => prev.x === 0 ? { visible: false, x: cx, y: cy } : prev);
+            }
+          }
+
           shapes.forEach((shape) => {
             shape.style.cursor = 'pointer';
             shape.style.transition = 'fill 0.2s ease, stroke 0.2s ease';
@@ -271,30 +301,49 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
 
             if (!isMobile) {
               shape.addEventListener('mouseenter', () => {
+                // Cancel any pending hide
+                if (hotspotHideTimer.current) {
+                  clearTimeout(hotspotHideTimer.current);
+                  hotspotHideTimer.current = null;
+                }
                 shapes.forEach((s) => {
                   s.style.fill = 'rgba(255, 255, 255, 0.15)';
                   s.style.stroke = 'rgba(255, 255, 255, 0.6)';
                 });
-                setTooltip((prev) => ({ ...prev, visible: true }));
+                // Calculate center of all shapes for card position
+                const containerRect = container.getBoundingClientRect();
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                shapes.forEach((s) => {
+                  const r = s.getBoundingClientRect();
+                  if (r.left < minX) minX = r.left;
+                  if (r.top < minY) minY = r.top;
+                  if (r.right > maxX) maxX = r.right;
+                  if (r.bottom > maxY) maxY = r.bottom;
+                });
+                const centerX = ((minX + maxX) / 2 - containerRect.left) / containerRect.width * 100;
+                const centerY = ((minY + maxY) / 2 - containerRect.top) / containerRect.height * 100;
+                setHotspotCard({ visible: true, x: centerX, y: centerY });
               });
 
               shape.addEventListener('mouseleave', () => {
-                shapes.forEach((s) => {
-                  s.style.fill = 'transparent';
-                  s.style.stroke = 'transparent';
-                });
-                setTooltip((prev) => ({ ...prev, visible: false }));
-              });
-
-              shape.addEventListener('mousemove', (e) => {
-                setTooltip({ visible: true, x: e.clientX, y: e.clientY });
+                // Delay hiding — check if mouse moved onto the card before actually hiding
+                hotspotHideTimer.current = setTimeout(() => {
+                  if (isMouseOverCard.current) return;
+                  shapes.forEach((s) => {
+                    s.style.fill = 'transparent';
+                    s.style.stroke = 'transparent';
+                  });
+                  setHotspotCard((prev) => ({ ...prev, visible: false }));
+                }, 300);
               });
             }
 
-            shape.addEventListener('click', (e) => {
-              e.stopPropagation();
-              handleEnterBuilding();
-            });
+            if (isMobile) {
+              shape.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleEnterBuilding();
+              });
+            }
           });
         }
       })
@@ -458,12 +507,74 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
         </>
       )}
 
-      {tooltip.visible && (
+      {/* Hotspot card — desktop only, positioned on SVG hover */}
+      {hotspotCard.visible && (
         <div
-          className="fixed z-50 px-3 py-1.5 bg-black/80 backdrop-blur-sm text-white text-sm font-medium rounded-lg pointer-events-none"
-          style={{ left: tooltip.x + 16, top: tooltip.y + 16 }}
+          ref={hotspotCardRef}
+          className="absolute z-50 flex-col items-center pointer-events-auto hidden landscape:flex"
+          style={{
+            left: `${hotspotCard.x}%`,
+            top: `${hotspotCard.y}%`,
+            transform: 'translate(-50%, -16px)',
+          }}
+          onMouseEnter={() => {
+            isMouseOverCard.current = true;
+            if (hotspotHideTimer.current) {
+              clearTimeout(hotspotHideTimer.current);
+              hotspotHideTimer.current = null;
+            }
+          }}
+          onMouseLeave={() => {
+            isMouseOverCard.current = false;
+            setHotspotCard((prev) => ({ ...prev, visible: false }));
+          }}
         >
-          Ingresar
+          {/* White dot with gray ring — 32×32 */}
+          <div
+            className="w-[32px] h-[32px] rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background: 'rgba(128, 128, 128, 0.23)',
+              border: '1.4px solid white',
+              backdropFilter: 'blur(50px)',
+              WebkitBackdropFilter: 'blur(50px)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <div className="w-[20px] h-[20px] rounded-full bg-white" />
+          </div>
+
+          {/* Card — gray glass outer border, white inner with everything */}
+          <div
+            className="mt-[6px] w-[168px] rounded-[10px] p-[6px]"
+            style={{
+              background: 'rgba(214, 214, 214, 0.45)',
+              backgroundBlendMode: 'luminosity',
+              backdropFilter: 'blur(50px)',
+              WebkitBackdropFilter: 'blur(50px)',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            {/* White inner — logo + name + button all inside */}
+            <div className="w-full rounded-[8px] bg-white/90 flex flex-col items-center pt-[14px] pb-[10px] px-[10px]">
+              {projectLogoUrl && (
+                <img src={projectLogoUrl} alt="" className="w-[36px] h-[36px] object-contain mb-[6px]" />
+              )}
+              {projectName && (
+                <span className="text-[12px] font-normal text-[#5A5A5A] tracking-[0.08em] mb-[10px]">
+                  {projectName.toUpperCase()}
+                </span>
+              )}
+              <button
+                onClick={handleEnterBuilding}
+                style={accentColor ? { backgroundColor: accentColor } : undefined}
+                className={`w-full h-[36px] rounded-full text-[13px] font-medium flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity outline-none ${
+                  accentColor ? 'text-white' : 'bg-[#1A1A1A] text-white'
+                }`}
+              >
+                Ingresar &rarr;
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -536,12 +647,14 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
             controls={false}
             onPlaying={() => setEntranceVideoPlaying(true)}
             onEnded={() => {
-              onEnterBuilding?.();
+              setEntranceFadingOut(true);
+              setTimeout(() => onEnterBuilding?.(), 500);
             }}
             className="w-full h-full"
           />
         </div>
       )}
+
     </div>
   );
 });

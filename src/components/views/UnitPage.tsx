@@ -1,69 +1,59 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Mail,
-  Phone,
-  Share2,
-  Check,
-  Eye,
-  X,
-  Images,
-  Play,
-} from 'lucide-react';
-import { VideoPlayer } from '@/components/video/VideoPlayer';
-import type { ExplorerPageData, Layer } from '@/types/hierarchy.types';
+import type { ExplorerPageData } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
-import { STATUS_LABELS } from '@/lib/constants/status';
 import { TopNav } from '@/components/navigation/TopNav';
+import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
 import { LocationView } from '@/components/navigation/LocationView';
+import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
+import { UnitMediaViewer } from '@/components/unit/UnitMediaViewer';
+
+type MediaTab = 'gallery' | 'video' | 'tour';
+type ActiveView = 'unit' | 'location';
+
+type NavSection = 'home' | 'map' | 'location' | 'contact';
+const TAB_TO_SECTION: Record<MediaTab, NavSection> = { gallery: 'map', video: 'home', tour: 'location' };
+const SECTION_TO_TAB: Record<string, MediaTab> = { map: 'gallery', home: 'video', location: 'tour' };
+
+const glassStyle: React.CSSProperties = {
+  background: 'rgba(128, 128, 128, 0.23)',
+  backgroundBlendMode: 'luminosity',
+  backdropFilter: 'blur(50px)',
+  WebkitBackdropFilter: 'blur(50px)',
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+};
 
 interface UnitPageProps {
   data: ExplorerPageData;
   floorBackgroundUrl?: string;
 }
 
-const STATUS_BADGE_STYLES: Record<string, string> = {
-  available: 'bg-green-500/80 text-white',
-  reserved: 'bg-yellow-500/80 text-white',
-  sold: 'bg-red-500/80 text-white',
-  not_available: 'bg-gray-500/80 text-white',
-};
-
-function getEmbedUrl(url: string): string {
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-  return url;
-}
-
-type ActiveView = 'unit' | 'location';
-
 export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const navigate = useNavigate();
-  const { project, currentLayer, media, siblings, currentPath } = data;
+  const { project, currentLayer, media } = data;
 
-  const [copied, setCopied] = useState(false);
-  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [mediaTab, setMediaTab] = useState<MediaTab>('gallery');
   const [activeView, setActiveView] = useState<ActiveView>('unit');
   const [contactOpen, setContactOpen] = useState(false);
-  const [tourModalOpen, setTourModalOpen] = useState(false);
-  const [mediaTab, setMediaTab] = useState<'gallery' | 'video' | 'tour'>('gallery');
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
+  const homeUrl = getHomeUrl(data);
+  const floorUrl = getBackUrl(data);
+
+  const logos = useMemo(
+    () => media.filter((m) => m.purpose === 'logo' || m.purpose === 'logo_developer'),
+    [media]
+  );
 
   const galleryImages = useMemo(() => {
-    const fichaImages = media.filter(
+    const ficha = media.filter(
       (m) => m.type === 'image' && (m.purpose === 'ficha_furnished' || m.purpose === 'ficha_measured')
     );
-    const otherImages = media.filter(
-      (m) => m.type === 'image' && m.purpose !== 'ficha_furnished' && m.purpose !== 'ficha_measured' && m.purpose !== 'background' && m.purpose !== 'background_mobile' && m.purpose !== 'logo' && m.purpose !== 'logo_developer'
+    const other = media.filter(
+      (m) => m.type === 'image' && !['ficha_furnished', 'ficha_measured', 'background', 'background_mobile', 'logo', 'logo_developer'].includes(m.purpose)
     );
-    return [...fichaImages, ...otherImages];
+    return [...ficha, ...other];
   }, [media]);
 
   const uploadedVideos = useMemo(
@@ -71,614 +61,186 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     [media]
   );
 
-  const logos = useMemo(
-    () => media.filter((m) => m.purpose === 'logo' || m.purpose === 'logo_developer'),
+  const fichaImages = useMemo(
+    () => media.filter((m) => m.type === 'image' && (m.purpose === 'ficha_furnished' || m.purpose === 'ficha_measured')),
     [media]
   );
+  const galleryOnlyImages = useMemo(
+    () => media.filter((m) => m.type === 'image' && m.purpose === 'gallery'),
+    [media]
+  );
+  const fichaImage = fichaImages[0]?.url;
+  const thumbnailUrl = floorBackgroundUrl ?? fichaImage;
 
+  const hasPlanos = fichaImages.length > 0;
+  const hasGallery = galleryOnlyImages.length > 0 || project.hasGallery;
   const hasVideo = !!(currentLayer?.videoUrl) || uploadedVideos.length > 0;
-  const hasTour = !!currentLayer?.tourEmbedUrl;
-  const hasGallery = galleryImages.length > 0;
+  const hasTour = !!(currentLayer?.tourEmbedUrl) || project.hasRecorrido360Embed;
 
-  const mediaTabs = useMemo(() => {
-    const tabs: { key: 'gallery' | 'video' | 'tour'; label: string; icon: typeof Images }[] = [];
-    if (hasGallery) tabs.push({ key: 'gallery', label: 'Galería', icon: Images });
-    if (hasVideo) tabs.push({ key: 'video', label: 'Video', icon: Play });
-    if (hasTour) tabs.push({ key: 'tour', label: 'Tour 360', icon: Eye });
-    return tabs;
-  }, [hasGallery, hasVideo, hasTour]);
+  const navItems = useMemo(() => {
+    const items: { section: NavSection; label: string }[] = [];
+    if (hasPlanos) items.push({ section: 'map', label: 'Planos' });
+    if (hasGallery || hasVideo) items.push({ section: 'home', label: 'Galería' });
+    if (hasTour) items.push({ section: 'location', label: 'Tour' });
+    return items;
+  }, [hasPlanos, hasGallery, hasVideo, hasTour]);
 
-  const isBuilding = project.type === 'building';
-  const entityPrefix = isBuilding ? 'Depto' : 'Lote';
-
-  const homeUrl = getHomeUrl(data);
-  const floorUrl = getBackUrl(data);
-
-  const prevImage = useCallback(() => {
-    setCarouselIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
-  }, [galleryImages.length]);
-
-  const nextImage = useCallback(() => {
-    setCarouselIndex((i) => (i + 1) % galleryImages.length);
-  }, [galleryImages.length]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const dx = touchStartX.current - e.changedTouches[0].clientX;
-    const dy = touchStartY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 0) nextImage();
-      else prevImage();
+  const handleNavigate = useCallback((section: NavSection) => {
+    const tab = SECTION_TO_TAB[section];
+    if (tab) {
+      setActiveView('unit');
+      setMediaTab(tab);
+      setGalleryIndex(0);
     }
-  }, [nextImage, prevImage]);
-
-  const handleWhatsApp = useCallback(() => {
-    if (!currentLayer) return;
-    const whatsapp = project.whatsapp?.replace(/\D/g, '') ?? '';
-    const message = encodeURIComponent(
-      `Hola, me interesa el ${entityPrefix} ${currentLayer.label} en ${project.name}. ¿Podrían darme más información?`
-    );
-    window.open(`https://wa.me/${whatsapp}?text=${message}`, '_blank');
-  }, [project, currentLayer, entityPrefix]);
-
-  const handleEmail = useCallback(() => {
-    if (!currentLayer) return;
-    const subject = encodeURIComponent(`Consulta ${entityPrefix} ${currentLayer.label} - ${project.name}`);
-    const body = encodeURIComponent(`Hola, me interesa el ${entityPrefix} ${currentLayer.label}. ¿Podrían darme más información?`);
-    window.open(`mailto:${project.email}?subject=${subject}&body=${body}`, '_blank');
-  }, [project, currentLayer, entityPrefix]);
-
-  const handleShare = useCallback(async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }, []);
 
-  const navigateToSibling = useCallback((sibling: Layer) => {
-    const siblingPath = [...currentPath.slice(0, -1), sibling.slug];
-    navigate(`/${siblingPath.join('/')}`);
-  }, [currentPath, navigate]);
+  const galleryPrev = useCallback(() => {
+    setGalleryIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+  }, [galleryImages.length]);
 
-  const activeSection = activeView === 'location' ? 'location' as const : 'map' as const;
+  const galleryNext = useCallback(() => {
+    setGalleryIndex((i) => (i + 1) % galleryImages.length);
+  }, [galleryImages.length]);
+
+  const activeSection = activeView === 'location' ? 'location' as const : TAB_TO_SECTION[mediaTab];
 
   if (!currentLayer) return null;
 
-  const {
-    area, price, description, orientation, features,
-    frontLength, depthLength, bedrooms, bathrooms,
-    unitTypeName, hasBalcony, floorNumber, isCorner, areaUnit,
-    tourEmbedUrl, videoUrl,
-  } = currentLayer;
-
-  const showTabs = mediaTabs.length > 1;
-  const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
-  const statusLabel = STATUS_LABELS[currentLayer.status]?.toUpperCase() ?? currentLayer.status;
-
-  const ambientes = isBuilding
-    ? [
-      bedrooms != null ? `${bedrooms} dorm.` : '',
-      bathrooms != null ? `${bathrooms} baño${bathrooms !== 1 ? 's' : ''}` : '',
-    ].filter(Boolean).join(' / ')
-    : '';
-  const pricePerM2 = area && area > 0 && price && price > 0 ? Math.round(price / area) : null;
-  const dimensions = (frontLength || depthLength)
-    ? `${frontLength ?? ''}m × ${depthLength ?? ''}m`
-    : null;
-
-  const characteristics: string[] = [];
-  if (hasBalcony) characteristics.push('Balcón');
-  if (isCorner) characteristics.push('Esquina');
-  if (features) features.forEach(f => characteristics.push(f.text));
-
-  const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
-    if (section === 'home') navigate(homeUrl);
-    else if (section === 'map') navigate(floorUrl);
-    else if (section === 'location') setActiveView('location');
-  };
+  /* Determine the full-bleed background based on active tab */
+  const bgImage = mediaTab === 'gallery'
+    ? fichaImage
+    : mediaTab === 'video'
+      ? (galleryImages[galleryIndex]?.url ?? fichaImage)
+      : fichaImage;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-hidden text-white">
-      {floorBackgroundUrl && (
-        <div className="fixed inset-0 pointer-events-none">
-          <img src={floorBackgroundUrl} alt="" className="w-full h-full object-cover opacity-30 blur-sm" />
-          <div className="absolute inset-0 bg-black/60" />
-        </div>
+    <div className="relative h-screen overflow-hidden bg-[#2A2A2A]">
+      {/* Background — full-bleed image changes per tab */}
+      {mediaTab === 'gallery' && fichaImage && (
+        <img src={fichaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      )}
+      {mediaTab === 'video' && galleryImages.length > 0 && (
+        <img
+          src={galleryImages[galleryIndex]?.url}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          key={galleryIndex}
+        />
       )}
 
       {activeView === 'unit' ? (
-        <>
-          {/* PORTRAIT + DESKTOP */}
-          <div className="relative h-full overflow-y-auto max-xl:landscape:hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <div className="relative max-w-7xl mx-auto px-6 xl:px-8 pt-6">
-              <div className="flex items-center gap-4 mb-1">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors outline-none flex-shrink-0"
-                  aria-label="Volver"
-                >
-                  <ChevronLeft className="w-5 h-5 text-white" />
-                </button>
-                <h1 className="text-2xl xl:text-3xl font-bold tracking-wide">
-                  {entityPrefix} {currentLayer.label}
-                </h1>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_BADGE_STYLES[currentLayer.status]}`}>
-                  {statusLabel}
-                </span>
-              </div>
-              {floorNumber != null && (
-                <p className="text-sm text-white/30 ml-13">Piso {floorNumber}</p>
-              )}
+        <div className="absolute inset-0 flex">
+          {/* Tour tab: full-screen iframe, NO card */}
+          {mediaTab === 'tour' && (
+            <div className="absolute inset-0 z-20">
+              <UnitMediaViewer
+                activeTab="tour"
+                galleryImages={[]}
+                uploadedVideos={[]}
+                tourEmbedUrl={currentLayer.tourEmbedUrl}
+              />
             </div>
+          )}
 
-            <div className="relative max-w-7xl mx-auto px-6 xl:px-8 py-8 grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-8 items-start">
-              <div>
-                {showTabs && (
-                  <div className="flex gap-1 mb-3">
-                    {mediaTabs.map(({ key, label, icon: Icon }) => (
-                      <button
-                        key={key}
-                        onClick={() => setMediaTab(key)}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors outline-none ${
-                          mediaTab === key
-                            ? 'bg-white/15 text-white'
-                            : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/60'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {(mediaTab === 'gallery' || (!showTabs && hasGallery)) && mediaTab !== 'video' && mediaTab !== 'tour' && (
-                  <>
-                    <div
-                      className="relative bg-white/5 rounded-2xl overflow-hidden flex items-center justify-center min-h-[300px] xl:min-h-[420px]"
-                      onTouchStart={handleTouchStart}
-                      onTouchEnd={handleTouchEnd}
-                    >
-                      {galleryImages.length > 0 ? (
-                        <img
-                          src={galleryImages[carouselIndex]?.url}
-                          alt={`${entityPrefix} ${currentLayer.label} — ${carouselIndex + 1}/${galleryImages.length}`}
-                          className="w-full h-auto object-contain p-4 xl:p-6"
-                          draggable={false}
-                        />
-                      ) : (
-                        <span className="text-white/20 text-sm">Sin imagen disponible</span>
-                      )}
-
-                      {galleryImages.length > 1 && (
-                        <>
-                          <button
-                            onClick={prevImage}
-                            className="hidden xl:flex absolute left-8 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 items-center justify-center transition-colors outline-none"
-                            aria-label="Anterior"
-                          >
-                            <ChevronLeft className="w-4 h-4 text-white" />
-                          </button>
-                          <button
-                            onClick={nextImage}
-                            className="hidden xl:flex absolute right-8 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 items-center justify-center transition-colors outline-none"
-                            aria-label="Siguiente"
-                          >
-                            <ChevronRight className="w-4 h-4 text-white" />
-                          </button>
-                        </>
-                      )}
-
-                      {galleryImages.length > 1 && (
-                        <div className="absolute bottom-3 right-3 bg-black/60 px-3 py-1 rounded-full text-xs text-white/70">
-                          {carouselIndex + 1} / {galleryImages.length}
-                        </div>
-                      )}
-                    </div>
-
-                    {galleryImages.length > 1 && (
-                      <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                        {galleryImages.map((img, i) => (
-                          <button
-                            key={img.id}
-                            onClick={() => setCarouselIndex(i)}
-                            className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors outline-none flex-shrink-0 ${
-                              i === carouselIndex ? 'border-white/60' : 'border-transparent hover:border-white/30'
-                            }`}
-                          >
-                            <img src={img.url!} alt={`Miniatura ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {mediaTab === 'video' && (
-                  <div className="space-y-4">
-                    {videoUrl && (
-                      <div className="rounded-2xl overflow-hidden bg-white/5">
-                        <div className="aspect-video">
-                          <iframe
-                            src={getEmbedUrl(videoUrl)}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {uploadedVideos.map((v) => (
-                      <div key={v.id} className="rounded-2xl overflow-hidden">
-                        <VideoPlayer src={v.url!} className="w-full aspect-video" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {mediaTab === 'tour' && tourEmbedUrl && (
-                  <div className="relative rounded-2xl overflow-hidden bg-white/5">
-                    <div className="aspect-video">
-                      <iframe
-                        src={getEmbedUrl(tourEmbedUrl)}
-                        className="w-full h-full"
-                        allow="xr-spatial-tracking; gyroscope; accelerometer"
-                        allowFullScreen
-                      />
-                    </div>
-                    <button
-                      onClick={() => setTourModalOpen(true)}
-                      className="absolute top-3 right-3 px-3 py-1.5 bg-black/60 hover:bg-black/80 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> Pantalla completa
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {price != null && price > 0 && (
-                  <div className="bg-white/5 rounded-2xl p-5">
-                    <div className="text-2xl font-bold">
-                      USD $ {price.toLocaleString('es-AR')}
-                    </div>
-                    {pricePerM2 != null && (
-                      <div className="text-sm text-white/40 mt-1">
-                        USD {pricePerM2} / {areaLabel}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="bg-white/5 rounded-2xl p-5">
-                  <h3 className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-4">Detalles</h3>
-                  <div className="space-y-3">
-                    {isBuilding ? (
-                      <>
-                        {unitTypeName && <DetailRow label="Tipo" value={unitTypeName} />}
-                        {area != null && area > 0 && <DetailRow label="Superficie" value={`${area} ${areaLabel}`} />}
-                        {ambientes && <DetailRow label="Ambientes" value={ambientes} />}
-                        {orientation && <DetailRow label="Orientación" value={orientation} />}
-                      </>
-                    ) : (
-                      <>
-                        {area != null && area > 0 && <DetailRow label="Superficie" value={`${area} ${areaLabel}`} />}
-                        {dimensions && <DetailRow label="Dimensiones" value={dimensions} />}
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {characteristics.length > 0 && (
-                  <div className="bg-white/5 rounded-2xl p-5">
-                    <h3 className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-4">Características</h3>
-                    <div className="space-y-2.5">
-                      {characteristics.map((text, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-green-400" />
-                          </div>
-                          <span className="text-sm">{text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {description && (
-                  <div className="bg-white/5 rounded-2xl p-5">
-                    <h3 className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-3">Descripción</h3>
-                    <p className="text-sm text-white/60 leading-relaxed">{description}</p>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <button onClick={handleEmail} className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="Email">
-                    <Mail className="w-4 h-4" />
-                  </button>
-                  <button onClick={handleWhatsApp} className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="WhatsApp">
-                    <Phone className="w-4 h-4" />
-                  </button>
-                  <button onClick={handleShare} className="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="Compartir">
-                    {copied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+          {/* Left: Glass info card — hidden during tour */}
+          {mediaTab !== 'tour' && (
+            <div className="absolute left-[47px] top-[132px] z-30 hidden lg:block landscape:max-xl:left-[16px] landscape:max-xl:top-[80px]">
+              <UnitInfoCard
+                layer={currentLayer}
+                thumbnailUrl={thumbnailUrl}
+                onContact={() => setContactOpen(true)}
+              />
             </div>
+          )}
 
-            {siblings.length > 1 && (
-              <div className="relative max-w-7xl mx-auto px-6 xl:px-8 pb-12">
-                <h3 className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-4">
-                  Otras unidades en este piso
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {siblings.map((sibling) => {
-                    const isCurrent = sibling.id === currentLayer.id;
-                    return (
-                      <button
-                        key={sibling.id}
-                        onClick={() => !isCurrent && navigateToSibling(sibling)}
-                        disabled={isCurrent}
-                        className={`bg-white/5 rounded-xl p-4 text-left transition-all outline-none ${
-                          isCurrent
-                            ? 'ring-1 ring-sky-400/50 bg-sky-500/10 cursor-default'
-                            : 'hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">{sibling.name}</div>
-                        {sibling.area && (
-                          <div className="text-xs text-white/40 mt-1">{sibling.area} {areaLabel}</div>
-                        )}
-                        {sibling.price && (
-                          <div className="text-sm font-medium text-green-400 mt-1">
-                            ${sibling.price.toLocaleString()}
-                          </div>
-                        )}
-                        <span className={`mt-2 inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE_STYLES[sibling.status]}`}>
-                          {STATUS_LABELS[sibling.status]}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="h-20 xl:h-0" />
-          </div>
-
-          {/* LANDSCAPE MOBILE */}
-          <div className="relative h-full hidden max-xl:landscape:flex flex-row">
-            <div className="w-[55%] h-full flex flex-col p-3 pt-2">
-              <div className="flex items-center gap-2 mb-1.5">
+          {/* Gallery arrows + progress — same style as 360 tour navigation */}
+          {mediaTab === 'video' && galleryImages.length > 1 && (
+            <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-[22px]">
+              {/* Arrow buttons — Figma: 44×44 glass circles, stroke 4px bold */}
+              <div className="flex items-center gap-[21px]">
                 <button
-                  onClick={() => navigate(-1)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors outline-none flex-shrink-0"
-                  aria-label="Volver"
+                  onClick={galleryPrev}
+                  className="w-[44px] h-[44px] rounded-[100px] flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+                  style={glassStyle}
+                  aria-label="Anterior"
                 >
-                  <ChevronLeft className="w-4 h-4 text-white" />
+                  <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))' }}>
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
                 </button>
-                <h1 className="text-sm font-bold tracking-wide truncate">
-                  {entityPrefix} {currentLayer.label}
-                </h1>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex-shrink-0 ${STATUS_BADGE_STYLES[currentLayer.status]}`}>
-                  {statusLabel}
-                </span>
+                <button
+                  onClick={galleryNext}
+                  className="w-[44px] h-[44px] rounded-[100px] flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+                  style={glassStyle}
+                  aria-label="Siguiente"
+                >
+                  <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.25))' }}>
+                    <polyline points="9 6 15 12 9 18" />
+                  </svg>
+                </button>
               </div>
-              {floorNumber != null && (
-                <p className="text-[10px] text-white/30 ml-9 -mt-0.5 mb-1">Piso {floorNumber}</p>
-              )}
-
-              {showTabs && (
-                <div className="flex gap-1 mb-1.5">
-                  {mediaTabs.map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      onClick={() => setMediaTab(key)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors outline-none ${
-                        mediaTab === key
-                          ? 'bg-white/15 text-white'
-                          : 'bg-white/5 text-white/40 hover:bg-white/10'
-                      }`}
-                    >
-                      <Icon className="w-3 h-3" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {(mediaTab === 'gallery' || (!showTabs && hasGallery)) && mediaTab !== 'video' && mediaTab !== 'tour' && (
-                <>
+              {/* Progress bar */}
+              <div className="flex items-center gap-[4px]">
+                {galleryImages.map((_, i) => (
                   <div
-                    className="flex-1 min-h-0 relative bg-white/5 rounded-xl overflow-hidden flex items-center justify-center"
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    {galleryImages.length > 0 ? (
-                      <img
-                        src={galleryImages[carouselIndex]?.url}
-                        alt={`${entityPrefix} ${currentLayer.label}`}
-                        className="w-full h-full object-contain p-2"
-                        draggable={false}
-                      />
-                    ) : (
-                      <span className="text-white/20 text-xs">Sin imagen</span>
-                    )}
-                    {galleryImages.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded-full text-[10px] text-white/70">
-                        {carouselIndex + 1} / {galleryImages.length}
-                      </div>
-                    )}
-                  </div>
-                  {galleryImages.length > 1 && (
-                    <div className="flex gap-1.5 mt-1.5 overflow-x-auto pb-0.5">
-                      {galleryImages.map((img, i) => (
-                        <button
-                          key={img.id}
-                          onClick={() => setCarouselIndex(i)}
-                          className={`w-10 h-10 rounded-md overflow-hidden border-2 transition-colors outline-none flex-shrink-0 ${
-                            i === carouselIndex ? 'border-white/60' : 'border-transparent hover:border-white/30'
-                          }`}
-                        >
-                          <img src={img.url!} alt={`Miniatura ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {mediaTab === 'video' && (
-                <div className="flex-1 min-h-0 space-y-2">
-                  {videoUrl && (
-                    <div className="rounded-xl overflow-hidden bg-white/5 h-full">
-                      <div className="aspect-video">
-                        <iframe
-                          src={getEmbedUrl(videoUrl)}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {uploadedVideos.map((v) => (
-                    <div key={v.id} className="rounded-xl overflow-hidden">
-                      <VideoPlayer src={v.url!} className="w-full aspect-video" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {mediaTab === 'tour' && tourEmbedUrl && (
-                <div className="flex-1 min-h-0 relative rounded-xl overflow-hidden bg-white/5">
-                  <iframe
-                    src={getEmbedUrl(tourEmbedUrl)}
-                    className="w-full h-full"
-                    allow="xr-spatial-tracking; gyroscope; accelerometer"
-                    allowFullScreen
+                    key={i}
+                    className={`h-[3px] rounded-full transition-all duration-300 ${
+                      i === galleryIndex ? 'w-[41px] bg-[#f2f2f2]' : 'w-[28px] bg-[rgba(234,234,234,0.45)]'
+                    }`}
                   />
-                  <button
-                    onClick={() => setTourModalOpen(true)}
-                    className="absolute top-2 right-2 px-2 py-1 bg-black/60 hover:bg-black/80 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1"
-                  >
-                    <Eye className="w-3 h-3" /> Expandir
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="w-[45%] h-full overflow-y-auto p-3 pt-11 space-y-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full">
-              {price != null && price > 0 && (
-                <div className="bg-white/5 rounded-xl p-3">
-                  <div className="text-lg font-bold">USD $ {price.toLocaleString('es-AR')}</div>
-                  {pricePerM2 != null && (
-                    <div className="text-[11px] text-white/40 mt-0.5">USD {pricePerM2} / {areaLabel}</div>
-                  )}
-                </div>
-              )}
-
-              <div className="bg-white/5 rounded-xl p-3">
-                <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2">Detalles</h3>
-                <div className="space-y-2">
-                  {isBuilding ? (
-                    <>
-                      {unitTypeName && <DetailRow label="Tipo" value={unitTypeName} compact />}
-                      {area != null && area > 0 && <DetailRow label="Superficie" value={`${area} ${areaLabel}`} compact />}
-                      {ambientes && <DetailRow label="Ambientes" value={ambientes} compact />}
-                      {orientation && <DetailRow label="Orientación" value={orientation} compact />}
-                    </>
-                  ) : (
-                    <>
-                      {area != null && area > 0 && <DetailRow label="Superficie" value={`${area} ${areaLabel}`} compact />}
-                      {dimensions && <DetailRow label="Dimensiones" value={dimensions} compact />}
-                    </>
-                  )}
-                </div>
+                ))}
               </div>
-
-              {characteristics.length > 0 && (
-                <div className="bg-white/5 rounded-xl p-3">
-                  <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2">Características</h3>
-                  <div className="space-y-1.5">
-                    {characteristics.map((text, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-2.5 h-2.5 text-green-400" />
-                        </div>
-                        <span className="text-xs">{text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {description && (
-                <div className="bg-white/5 rounded-xl p-3">
-                  <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2">Descripción</h3>
-                  <p className="text-xs text-white/60 leading-relaxed">{description}</p>
-                </div>
-              )}
-
-              <div className="flex items-center justify-center gap-2 pt-1 pb-2">
-                <button onClick={handleEmail} className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="Email">
-                  <Mail className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={handleWhatsApp} className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="WhatsApp">
-                  <Phone className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={handleShare} className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors outline-none" aria-label="Compartir">
-                  {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              {siblings.length > 1 && (
-                <div className="pt-1 pb-3">
-                  <h3 className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2">Otras unidades</h3>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {siblings.map((sibling) => {
-                      const isCurrent = sibling.id === currentLayer.id;
-                      return (
-                        <button
-                          key={sibling.id}
-                          onClick={() => !isCurrent && navigateToSibling(sibling)}
-                          disabled={isCurrent}
-                          className={`bg-white/5 rounded-lg p-2 text-left transition-all outline-none ${
-                            isCurrent
-                              ? 'ring-1 ring-sky-400/50 bg-sky-500/10 cursor-default'
-                              : 'hover:bg-white/10'
-                          }`}
-                        >
-                          <div className="font-semibold text-white text-[11px]">{sibling.name}</div>
-                          {sibling.area && <div className="text-[9px] text-white/40">{sibling.area} {areaLabel}</div>}
-                          <span className={`mt-1 inline-flex px-1.5 py-0.5 rounded-full text-[8px] font-bold ${STATUS_BADGE_STYLES[sibling.status]}`}>
-                            {STATUS_LABELS[sibling.status]}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        </>
+          )}
+
+          {/* Mobile portrait: card overlaid at bottom — hidden during tour */}
+          {mediaTab !== 'tour' && (
+            <div className="absolute bottom-0 left-0 right-0 z-30 lg:hidden p-4 pb-16 landscape:hidden">
+              <div className="max-w-[337px] mx-auto">
+                <UnitInfoCard
+                  layer={currentLayer}
+                  thumbnailUrl={thumbnailUrl}
+                  onContact={() => setContactOpen(true)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <LocationView project={project} />
       )}
 
+      {/* TopNav */}
       <TopNav
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onContactOpen={() => setContactOpen(true)}
-        mapLabel="Niveles"
-        showBack={activeView === 'location'}
-        onBack={() => setActiveView('unit')}
+        navItems={navItems}
+        mapLabel="Planos"
+        showBack
+        onBack={activeView === 'location'
+          ? () => setActiveView('unit')
+          : () => navigate(floorUrl)
+        }
       />
+
+      {/* Home button — Figma: glass circle next to back button */}
+      {activeView === 'unit' && (
+        <button
+          onClick={() => navigate(homeUrl)}
+          className="absolute top-[32px] left-[104px] z-40 w-[44px] h-[44px] rounded-[100px] flex items-center justify-center text-white/90 hover:text-white transition-colors outline-none landscape:max-xl:top-[16px] landscape:max-xl:left-[60px] landscape:max-xl:w-[36px] landscape:max-xl:h-[36px] portrait:top-3 portrait:left-[52px] portrait:w-[36px] portrait:h-[36px]"
+          style={glassStyle}
+          aria-label="Inicio"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </button>
+      )}
+
+      {/* Social icons — bottom right */}
+      {activeView === 'unit' && <SocialButtons project={project} />}
 
       <ContactModal
         project={project}
@@ -686,40 +248,6 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
         open={contactOpen}
         onClose={() => setContactOpen(false)}
       />
-
-      {tourModalOpen && tourEmbedUrl && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center"
-          onClick={() => setTourModalOpen(false)}
-        >
-          <div
-            className="relative w-full h-full max-w-6xl max-h-[90vh] m-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setTourModalOpen(false)}
-              className="absolute top-3 right-3 z-10 w-10 h-10 bg-black/60 hover:bg-black rounded-full flex items-center justify-center text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <iframe
-              src={getEmbedUrl(tourEmbedUrl)}
-              className="w-full h-full rounded-xl"
-              allow="xr-spatial-tracking; gyroscope; accelerometer"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value, compact }: { label: string; value: string; compact?: boolean }) {
-  return (
-    <div className={`flex justify-between ${compact ? 'text-xs' : 'text-sm'}`}>
-      <span className="text-white/50">{label}</span>
-      <span className="font-medium">{value}</span>
     </div>
   );
 }
