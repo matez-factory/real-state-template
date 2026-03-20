@@ -106,12 +106,6 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
 
   if (!currentLayer) return null;
 
-  /* Determine the full-bleed background based on active tab */
-  const bgImage = mediaTab === 'gallery'
-    ? fichaImage
-    : mediaTab === 'video'
-      ? (galleryImages[galleryIndex]?.url ?? fichaImage)
-      : fichaImage;
 
   return (
     <div className="relative h-screen overflow-hidden bg-[#2A2A2A]">

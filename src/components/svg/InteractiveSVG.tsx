@@ -27,24 +27,6 @@ const STATUS_DOT_COLORS: Record<EntityStatus, string> = {
   not_available: '#9ca3af',
 };
 
-const STATUS_FILL: Record<EntityStatus, string> = {
-  available: 'rgba(34, 197, 94, 0.12)',
-  reserved: 'rgba(234, 179, 8, 0.12)',
-  sold: 'rgba(239, 68, 68, 0.12)',
-  not_available: 'rgba(156, 163, 175, 0.08)',
-};
-const STATUS_FILL_HOVER: Record<EntityStatus, string> = {
-  available: 'rgba(34, 197, 94, 0.30)',
-  reserved: 'rgba(234, 179, 8, 0.30)',
-  sold: 'rgba(239, 68, 68, 0.30)',
-  not_available: 'rgba(156, 163, 175, 0.18)',
-};
-const STATUS_STROKE: Record<EntityStatus, string> = {
-  available: 'rgba(34, 197, 94, 0.6)',
-  reserved: 'rgba(234, 179, 8, 0.6)',
-  sold: 'rgba(239, 68, 68, 0.6)',
-  not_available: 'rgba(156, 163, 175, 0.3)',
-};
 
 type ListenerEntry = { element: SVGElement; event: string; handler: EventListener };
 
