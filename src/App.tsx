@@ -8,6 +8,8 @@ import {
 } from '@/lib/data/transform';
 import { collectPreloadUrls } from '@/lib/collectPreloadUrls';
 
+import { AdminLogin } from '@/pages/AdminLogin';
+import { AdminDashboard } from '@/pages/AdminDashboard';
 import { BuildingSplashPage } from '@/components/views/BuildingSplashPage';
 import { LotsSplashPage } from '@/components/views/LotsSplashPage';
 import { ProjectHomePage } from '@/components/views/ProjectHomePage';
@@ -295,13 +297,20 @@ export default function App() {
         />
       )}
 
-      {/* Content — only render routes once data is loaded */}
-      {data && (
-        <Routes>
-          <Route path="/" element={<SplashRoute raw={data} onPlayIntro={handlePlayIntro} />} />
-          <Route path="/*" element={<LayerRoute raw={data} />} />
-        </Routes>
-      )}
+      {/* Routes */}
+      <Routes>
+        {/* Admin — no project data needed */}
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+        {/* Public — only render once data is loaded */}
+        {data && (
+          <>
+            <Route path="/" element={<SplashRoute raw={data} onPlayIntro={handlePlayIntro} />} />
+            <Route path="/*" element={<LayerRoute raw={data} />} />
+          </>
+        )}
+      </Routes>
 
       {/* Intro video overlay — persists across route changes for seamless transition */}
       {introVideo && (
