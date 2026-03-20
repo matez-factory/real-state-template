@@ -21,7 +21,18 @@ export function BuildingSplashPage({ data, onPlayIntro }: BuildingSplashPageProp
     [media]
   );
 
-  const firstChildSlug = children[0]?.slug;
+  // If project has 360 tour and there's a tour layer, go there first (it has the hotspot/spin media)
+  // Otherwise pick the first non-tour child with content
+  const firstChildSlug = useMemo(() => {
+    if (project.has360Tour) {
+      const tourLayer = children.find((c) => c.type === 'tour');
+      if (tourLayer) return tourLayer.slug;
+    }
+    const nonTour = children.filter((c) => c.type !== 'tour');
+    const withMedia = nonTour.find((c) => c.svgOverlayUrl || c.backgroundImageUrl);
+    if (withMedia) return withMedia.slug;
+    return nonTour[0]?.slug;
+  }, [children, project.has360Tour]);
 
   const introVideoUrl = useMemo(() => {
     if (!project.hasVideoIntro) return null;

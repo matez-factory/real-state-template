@@ -1,8 +1,13 @@
 import type { ExplorerPageData } from '@/types/hierarchy.types';
 
-/** URL for the "Inicio" button — always the first root layer */
+/** URL for the "Inicio" button — tour layer if project has 360, otherwise first root layer */
 export function getHomeUrl(data: ExplorerPageData): string {
-  const { rootLayers } = data;
+  const { rootLayers, project } = data;
+  // If project has 360 tour, navigate to the tour layer
+  if (project.has360Tour) {
+    const tourLayer = rootLayers.find((l) => l.type === 'tour');
+    if (tourLayer) return `/${tourLayer.slug}`;
+  }
   if (rootLayers.length > 0) {
     return `/${rootLayers[0].slug}`;
   }
