@@ -113,6 +113,13 @@ function LayerRoute({ raw }: { raw: RawProjectData }) {
   }
 
   if (current.children.length === 0 && current.currentLayer) {
+    // Building floors/zones/towers without children → show ExplorerView with sibling navigation
+    // so the user can switch to floors that have content (only actual units get UnitPage)
+    const layerType = current.currentLayer.type;
+    if (current.project.type === 'building' && (layerType === 'floor' || layerType === 'zone' || layerType === 'tower')) {
+      return <ExplorerView data={current} siblingBundle={bundle} />;
+    }
+
     let floorBackgroundUrl: string | undefined;
     if (layerSlugs.length > 1) {
       try {

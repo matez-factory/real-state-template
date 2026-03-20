@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAuthenticated, clearToken, adminFetch } from '@/lib/auth';
-import { fetchProject, fetchLayers } from '@/lib/api';
+import { fetchProject, fetchLayers, fetchUnitTypes } from '@/lib/api';
 
 type EntityStatus = 'available' | 'reserved' | 'sold' | 'not_available';
 
@@ -49,11 +49,19 @@ export function AdminDashboard() {
       setLoading(true);
       const project = await fetchProject();
       setProjectName(project.name);
-      const layers = await fetchLayers(project.id);
+      const [layers, unitTypes] = await Promise.all([
+        fetchLayers(project.id),
+        fetchUnitTypes(project.id),
+      ]);
 
       const parentMap = new Map<string, string>();
       for (const l of layers) {
         parentMap.set(l.id, l.label || l.name);
+      }
+
+      const unitTypeMap = new Map<string, string>();
+      for (const ut of unitTypes) {
+        unitTypeMap.set(ut.id, ut.name);
       }
 
       const leafLayers = layers
@@ -67,7 +75,7 @@ export function AdminDashboard() {
           price: l.price ?? null,
           area: l.area ?? null,
           areaUnit: l.area_unit || 'm2',
-          unitTypeName: l.properties?.unit_type_name as string | undefined,
+          unitTypeName: l.unit_type_id ? unitTypeMap.get(l.unit_type_id) : (l.properties?.unit_type as string | undefined),
           sortOrder: l.sort_order,
           depth: l.depth,
           type: l.type,
