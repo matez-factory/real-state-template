@@ -56,7 +56,13 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   const viewpointOrder = useMemo(() => {
     return media
       .filter((m) => m.type === 'svg' && m.purpose === 'hotspot')
-      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .sort((a, b) => {
+        // Sort by sortOrder first, then by viewpoint name (stop-01 < stop-02 < stop-03)
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        const aVp = ((a.metadata as Record<string, unknown>)?.viewpoint as string) ?? '';
+        const bVp = ((b.metadata as Record<string, unknown>)?.viewpoint as string) ?? '';
+        return aVp.localeCompare(bVp, undefined, { numeric: true });
+      })
       .map((m) => (m.metadata as Record<string, unknown>)?.viewpoint as string)
       .filter(Boolean);
   }, [media]);
