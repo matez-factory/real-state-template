@@ -43,7 +43,7 @@ export function SocialButtons({ project }: SocialButtonsProps) {
       )}
       {project.website && (
         <a
-          href={project.website}
+          href={project.website.startsWith('http') ? project.website : `https://${project.website}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-[43px] h-[44px] rounded-full outline-none transition-opacity hover:opacity-80"
