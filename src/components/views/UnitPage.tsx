@@ -47,15 +47,10 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     [media]
   );
 
-  const galleryImages = useMemo(() => {
-    const ficha = media.filter(
-      (m) => m.type === 'image' && (m.purpose === 'ficha_furnished' || m.purpose === 'ficha_measured')
-    );
-    const other = media.filter(
-      (m) => m.type === 'image' && !['ficha_furnished', 'ficha_measured', 'background', 'background_mobile', 'logo', 'logo_developer'].includes(m.purpose)
-    );
-    return [...ficha, ...other];
-  }, [media]);
+  const galleryImages = useMemo(
+    () => media.filter((m) => m.type === 'image' && m.purpose === 'gallery'),
+    [media]
+  );
 
   const uploadedVideos = useMemo(
     () => media.filter((m) => m.type === 'video'),
@@ -66,15 +61,11 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     () => media.filter((m) => m.type === 'image' && (m.purpose === 'ficha_furnished' || m.purpose === 'ficha_measured')),
     [media]
   );
-  const galleryOnlyImages = useMemo(
-    () => media.filter((m) => m.type === 'image' && m.purpose === 'gallery'),
-    [media]
-  );
   const fichaImage = fichaImages[0]?.url;
   const thumbnailUrl = floorBackgroundUrl ?? fichaImage;
 
   const hasPlanos = fichaImages.length > 0;
-  const hasGallery = galleryOnlyImages.length > 0 || project.hasGallery;
+  const hasGallery = galleryImages.length > 0 || project.hasGallery;
   const hasVideo = !!(currentLayer?.videoUrl) || uploadedVideos.length > 0;
   const hasTour = !!(currentLayer?.tourEmbedUrl) || project.hasRecorrido360Embed;
 
