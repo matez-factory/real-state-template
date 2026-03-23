@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
-import { getBackUrl } from '@/lib/navigation';
+// Back from tour always goes to splash — no need for getBackUrl
 import { Spin360Viewer, type Spin360ViewerRef } from '@/components/video/Spin360Viewer';
 import { MobileHint } from '@/components/shared/MobileHint';
 import { TopNav } from '@/components/navigation/TopNav';
@@ -85,7 +85,8 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
     return null;
   }, [data.currentPath, children, data.currentLayer, data.siblings]);
 
-  const backUrl = getBackUrl(data);
+  // From the tour/home page, back always goes to splash
+  const backUrl = '/';
 
   const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
     if (section === 'home') {
