@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
-import { getHomeUrl, getBackUrl } from '@/lib/navigation';
+import { getBackUrl } from '@/lib/navigation';
 import { Spin360Viewer, type Spin360ViewerRef } from '@/components/video/Spin360Viewer';
 import { MobileHint } from '@/components/shared/MobileHint';
 import { TopNav } from '@/components/navigation/TopNav';
@@ -85,7 +85,6 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
     return null;
   }, [data.currentPath, children, data.currentLayer, data.siblings]);
 
-  const homeUrl = getHomeUrl(data);
   const backUrl = getBackUrl(data);
 
   const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
