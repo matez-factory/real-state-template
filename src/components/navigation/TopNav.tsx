@@ -199,7 +199,7 @@ function MobileTabIcon({ section, active }: { section: string; active: boolean }
     return active ? (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H4C3.45 21 3 20.55 3 20V9.5Z" fill={color} />
-        <path d="M9 21V13H15V21" fill="white" />
+        <path d="M9 21V13H15V21" className="fill-white" />
       </svg>
     ) : (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

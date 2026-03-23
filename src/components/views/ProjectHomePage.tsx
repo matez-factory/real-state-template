@@ -88,17 +88,17 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
   const homeUrl = getHomeUrl(data);
   const backUrl = getBackUrl(data);
 
-  const isHomeLayer = data.currentLayer?.id === data.rootLayers[0]?.id;
-
   const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
     if (section === 'home') {
-      if (isHomeLayer) {
-        setActiveView('tour');
-      } else {
-        navigate(homeUrl);
-      }
+      // Already on the home page — just switch back to tour view
+      setActiveView('tour');
     } else if (section === 'map') {
-      spinRef.current?.enterBuilding();
+      // Navigate directly to first floor — avoids flash of tour view
+      if (mapTarget) {
+        navigate(mapTarget);
+      } else {
+        spinRef.current?.enterBuilding();
+      }
     } else if (section === 'location') {
       setActiveView('location');
     }
@@ -108,7 +108,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
 
   return (
     <div className="relative h-screen overflow-hidden bg-black">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         {activeView === 'tour' && (
           <Spin360Viewer
             ref={spinRef}

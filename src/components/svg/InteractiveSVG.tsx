@@ -84,11 +84,9 @@ export function InteractiveSVG({
     svg.querySelectorAll('*').forEach((el) => {
       el.removeAttribute('fill');
       if ((el as HTMLElement).style) (el as HTMLElement).style.removeProperty('fill');
+      // Apply fill:none inline to each element — avoids a <style> rule that leaks to the whole page
+      (el as SVGElement).style.setProperty('fill', 'none', 'important');
     });
-    const resetStyle = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-    resetStyle.textContent = ':not([data-ui]):not([data-ui] *):not([data-entity]){fill:none!important}';
-    resetStyle.setAttribute('data-reset', '1');
-    svg.insertBefore(resetStyle, svg.firstChild);
 
     if (activeBgUrl) {
       const viewBox = svg.getAttribute('viewBox');
