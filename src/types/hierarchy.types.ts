@@ -24,7 +24,9 @@ export type MediaPurpose =
   | 'logo_developer'
   | 'hotspot'
   | 'layers_gallery'
-  | 'exterior_360';
+  | 'exterior_360'
+  | 'favicon'
+  | 'favicon_dark';
 
 // ============================================================
 // Feature items

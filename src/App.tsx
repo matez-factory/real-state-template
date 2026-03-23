@@ -208,6 +208,23 @@ export default function App() {
           document.documentElement.style.setProperty('--accent-color', rawProject.accent_color);
         }
 
+        // Set page title: use tagline (tab_title) if set, otherwise project name
+        document.title = rawProject.tagline || rawProject.name;
+
+        // Set favicon: prefer uploaded favicon media, fallback to project logo
+        const faviconMedia = rawMedia.find((m) => m.purpose === 'favicon' && !m.layer_id);
+        const faviconUrl = faviconMedia?.url || rawProject.logo_url || rawProject.secondary_logo_url;
+        if (faviconUrl) {
+          let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+          }
+          link.type = faviconUrl.includes('.svg') ? 'image/svg+xml' : 'image/png';
+          link.href = faviconUrl;
+        }
+
         // Phase 2: Preload assets (only if not already cached)
         const alreadyCached = (() => {
           try { return !!sessionStorage.getItem('preloaded:' + PROJECT_SLUG); } catch { return false; }
