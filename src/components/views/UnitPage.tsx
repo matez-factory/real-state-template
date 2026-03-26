@@ -57,12 +57,17 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     [media]
   );
 
-  const fichaImages = useMemo(
-    () => media.filter((m) => m.type === 'image' && (m.purpose === 'ficha_furnished' || m.purpose === 'ficha_measured')),
+  const fichaImages = useMemo(() => {
+    const furnished = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_furnished');
+    const measured = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_measured');
+    return [...furnished, ...measured];
+  }, [media]);
+  const unitThumbnail = useMemo(
+    () => media.find((m) => m.purpose === 'thumbnail' && m.type === 'image')?.url,
     [media]
   );
   const fichaImage = fichaImages[0]?.url;
-  const thumbnailUrl = floorBackgroundUrl ?? fichaImage;
+  const thumbnailUrl = unitThumbnail ?? fichaImage ?? floorBackgroundUrl;
 
   const hasPlanos = fichaImages.length > 0;
   const hasGallery = galleryImages.length > 0 || project.hasGallery;
