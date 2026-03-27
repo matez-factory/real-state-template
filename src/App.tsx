@@ -34,9 +34,11 @@ function loadAsset(url: string): Promise<void> {
 interface SplashRouteProps {
   raw: RawProjectData;
   onPlayIntro?: (videoUrl: string, targetPath: string) => void;
+  preloadPhase: 'loading' | 'fadeout' | 'done';
+  preloadProgress: number;
 }
 
-function SplashRoute({ raw, onPlayIntro }: SplashRouteProps) {
+function SplashRoute({ raw, onPlayIntro, preloadPhase, preloadProgress }: SplashRouteProps) {
   const data = useMemo(
     () => buildExplorerPageData(raw.rawProject, raw.rawLayers, raw.rawMedia, [], raw.rawUnitTypes),
     [raw]
@@ -45,7 +47,7 @@ function SplashRoute({ raw, onPlayIntro }: SplashRouteProps) {
   if (data.project.type === 'lots') {
     return <LotsSplashPage data={data} />;
   }
-  return <BuildingSplashPage data={data} onPlayIntro={onPlayIntro} />;
+  return <BuildingSplashPage data={data} onPlayIntro={onPlayIntro} preloadPhase={preloadPhase} preloadProgress={preloadProgress} />;
 }
 
 // ─── Layer route (/*) ───────────────────────────────────────
@@ -146,7 +148,6 @@ export default function App() {
   const [phase, setPhase] = useState<'loading' | 'fadeout' | 'done'>('loading');
   const [progress, setProgress] = useState(0);
   const [projectName, setProjectName] = useState(PROJECT_SLUG.toUpperCase());
-  const [splashBgReady, setSplashBgReady] = useState<string | null>(null);
 
   // Intro video overlay state — lives at App level so it persists across route changes
   const [introVideo, setIntroVideo] = useState<{ url: string; targetPath: string } | null>(null);
@@ -235,28 +236,10 @@ export default function App() {
           return;
         }
 
-        // Prioritize splash background — load it first and show it behind preloader
-        const splashBgUrl = rawMedia.find(
-          (m) => !m.layer_id && !m.unit_type_id && m.purpose === 'background' && m.type === 'image'
-        )?.url;
-        if (splashBgUrl) {
-          // Load via Image so browser actually decodes and caches the pixels
-          await new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-            img.src = splashBgUrl;
-            setTimeout(resolve, ASSET_TIMEOUT);
-          });
-          if (cancelled) return;
-          setSplashBgReady(splashBgUrl);
-        }
-
         const urls = collectPreloadUrls(rawLayers, rawMedia);
         if (urls.length === 0) {
           try { sessionStorage.setItem('preloaded:' + PROJECT_SLUG, '1'); } catch {}
-          setPhase('fadeout');
-          setTimeout(() => { if (!cancelled) setPhase('done'); }, 400);
+          setPhase('done');
           return;
         }
 
@@ -274,8 +257,7 @@ export default function App() {
             setProgress(Math.ceil((completed / total) * 100));
             if (completed >= total) {
               try { sessionStorage.setItem('preloaded:' + PROJECT_SLUG, '1'); } catch {}
-              setPhase('fadeout');
-              setTimeout(() => { if (!cancelled) setPhase('done'); }, 400);
+              setPhase('done');
             } else {
               next();
             }
@@ -328,11 +310,13 @@ export default function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
         {/* Public — only render once data is loaded */}
-        {data && (
+        {data ? (
           <>
-            <Route path="/" element={<SplashRoute raw={data} onPlayIntro={handlePlayIntro} />} />
+            <Route path="/" element={<SplashRoute raw={data} onPlayIntro={handlePlayIntro} preloadPhase={phase} preloadProgress={progress} />} />
             <Route path="/*" element={<LayerRoute raw={data} />} />
           </>
+        ) : (
+          <Route path="*" element={<div className="h-screen bg-black" />} />
         )}
       </Routes>
 
@@ -351,37 +335,6 @@ export default function App() {
         />
       )}
 
-      {/* Preloader overlay — covers everything until assets are cached */}
-      {phase !== 'done' && (
-        <div
-          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-400 ${
-            phase === 'fadeout' ? 'opacity-0' : 'opacity-100'
-          }`}
-        >
-          {/* Splash background visible behind preloader text */}
-          {splashBgReady ? (
-            <img
-              src={splashBgReady}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover brightness-[0.3]"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-black" />
-          )}
-          <h1 className="relative z-10 mb-4 text-2xl font-bold tracking-wider text-white uppercase">
-            {projectName}
-          </h1>
-          <p className="relative z-10 mb-1 text-sm text-white/60">Cargando la experiencia 3D...</p>
-          <p className="relative z-10 mb-6 text-xs text-white/40">Esto puede tardar unos segundos.</p>
-          <div className="relative z-10 w-64 h-1 rounded-full bg-white/10 overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all duration-200 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="relative z-10 mt-2 text-xs text-white/50 tabular-nums">{progress}%</p>
-        </div>
-      )}
     </>
   );
 }
