@@ -68,6 +68,7 @@ export function SiblingNavigator({
         backdropFilter: 'blur(50px)',
         WebkitBackdropFilter: 'blur(50px)',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        border: '1.4px solid rgba(255, 255, 255, 0.4)',
       }}
     >
       {/* Header: logo + name + "Nivel" on the glass bg */}
