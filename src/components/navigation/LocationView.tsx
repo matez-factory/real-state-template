@@ -51,12 +51,12 @@ export function LocationView({ project }: LocationViewProps) {
       />
 
       {mapQuery && (
-        <div className="absolute bottom-16 xl:bottom-6 left-0 right-0 z-10 flex items-center justify-center gap-2 md:gap-3 xl:gap-4 pointer-events-none">
+        <div className="absolute bottom-16 xl:bottom-6 left-0 right-0 z-10 flex items-center justify-center gap-[clamp(8px,1vw,14px)] pointer-events-none">
           <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="pointer-events-auto px-3 py-1.5 md:px-4 md:py-2 xl:px-6 xl:py-3 glass-panel !rounded-full text-white text-xs md:text-sm xl:text-base font-medium transition-colors hover:bg-white/10"
+            className="pointer-events-auto px-[clamp(12px,1.5vw,20px)] py-[clamp(6px,0.7vw,10px)] glass-panel !rounded-full text-white text-[clamp(11px,0.9vw,13px)] font-medium transition-colors hover:bg-white/10"
           >
             Cómo llegar
           </a>
@@ -64,7 +64,7 @@ export function LocationView({ project }: LocationViewProps) {
             href={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="pointer-events-auto px-3 py-1.5 md:px-4 md:py-2 xl:px-6 xl:py-3 glass-panel !rounded-full text-white text-xs md:text-sm xl:text-base font-medium transition-colors hover:bg-white/10"
+            className="pointer-events-auto px-[clamp(12px,1.5vw,20px)] py-[clamp(6px,0.7vw,10px)] glass-panel !rounded-full text-white text-[clamp(11px,0.9vw,13px)] font-medium transition-colors hover:bg-white/10"
           >
             Ver en Google Maps
           </a>

@@ -5,9 +5,11 @@ import type { ExplorerPageData } from '@/types/hierarchy.types';
 interface BuildingSplashPageProps {
   data: ExplorerPageData;
   onPlayIntro?: (videoUrl: string, targetPath: string) => void;
+  preloadPhase?: 'loading' | 'fadeout' | 'done';
+  preloadProgress?: number;
 }
 
-export function BuildingSplashPage({ data, onPlayIntro }: BuildingSplashPageProps) {
+export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', preloadProgress = 100 }: BuildingSplashPageProps) {
   const navigate = useNavigate();
   const { project, media, children, childrenMedia } = data;
 
@@ -102,22 +104,39 @@ export function BuildingSplashPage({ data, onPlayIntro }: BuildingSplashPageProp
           </p>
         )}
 
-        {/* Enter button — Figma: 340×52, rounded-69, Poppins 500 20px #1A1A1A */}
-        <button
-          onClick={handleEnter}
-          style={hasAccent ? { backgroundColor: project.accentColor, color: '#FFFFFF' } : undefined}
-          className={`mt-[18px] h-[52px] rounded-[69px] text-[20px] font-medium leading-[30px] capitalize transition-opacity duration-200 hover:opacity-90 outline-none portrait:w-[217px] landscape:w-[clamp(200px,25vw,340px)] flex items-center justify-center bg-white ${
-            hasAccent ? '' : 'text-[#1A1A1A]'
-          }`}
-        >
-          <span>Ingresar</span>
-          {/* Figma: ellipse 29.75×28.49 container + arrow 17.5×16.75, stroke 1.5px #1A1A1A */}
-          <span className="relative ml-[8px] w-[30px] h-[29px] flex items-center justify-center">
-            <svg width="18" height="17" viewBox="0 0 18 17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 8.5H14M14 8.5L9 3.5M14 8.5L9 13.5" />
-            </svg>
-          </span>
-        </button>
+        {/* Enter button / loading bar */}
+        {preloadPhase === 'done' ? (
+          <button
+            onClick={handleEnter}
+            style={hasAccent ? { backgroundColor: project.accentColor, color: '#FFFFFF' } : undefined}
+            className={`mt-[18px] h-[52px] rounded-[69px] text-[20px] font-medium leading-[30px] capitalize transition-opacity duration-200 hover:opacity-90 outline-none portrait:w-[217px] landscape:w-[clamp(200px,25vw,340px)] flex items-center justify-center bg-white ${
+              hasAccent ? '' : 'text-[#1A1A1A]'
+            }`}
+          >
+            <span>Ingresar</span>
+            <span className="relative ml-[8px] w-[30px] h-[29px] flex items-center justify-center">
+              <svg width="18" height="17" viewBox="0 0 18 17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 8.5H14M14 8.5L9 3.5M14 8.5L9 13.5" />
+              </svg>
+            </span>
+          </button>
+        ) : (
+          <div className="mt-[18px] flex flex-col items-center portrait:items-center landscape:items-start gap-[6px] portrait:w-[217px] landscape:w-[clamp(200px,25vw,340px)]">
+            <p className="text-[clamp(11px,1vw,14px)] text-white/60 font-light">
+              Cargando la experiencia 3D...
+            </p>
+            <div className="w-full h-[4px] rounded-full bg-white/15 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-200 ease-out"
+                style={{
+                  width: `${preloadProgress}%`,
+                  backgroundColor: project.accentColor || '#FFFFFF',
+                }}
+              />
+            </div>
+            <span className="text-[clamp(10px,0.8vw,12px)] text-white/40 tabular-nums">{preloadProgress}%</span>
+          </div>
+        )}
       </div>
 
       {/* Social icons — bottom right, desktop only (hidden in portrait) */}
