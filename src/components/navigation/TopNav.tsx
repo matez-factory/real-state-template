@@ -138,35 +138,40 @@ export function TopNav({
         </nav>
       </div>
 
-      {/* ── Right: Fullscreen text + button ── */}
+      {/* ── Right: Fullscreen button + hover tooltip ── */}
       <div className={`absolute top-[clamp(16px,2.5vh,32px)] right-[clamp(16px,2vw,30px)] z-40 items-center gap-[clamp(6px,0.7vw,10px)] text-white ${
         compact ? 'flex portrait:top-[46px] portrait:right-[33px]' : 'hidden landscape:flex'
       }`}>
-        <span className={`text-[clamp(9px,2.5vh,15px)] font-semibold ${compact ? 'hidden landscape:inline' : ''}`}>
-          {isFullscreen ? 'Salir Pantalla' : 'Pantalla Completa'}
-        </span>
-        <button
-          onClick={toggleFullscreen}
-          className={`${btnClass} ${compact ? 'portrait:!size-[clamp(24px,6vh,34px)]' : ''}`}
-          style={glassStyle}
-          aria-label={isFullscreen ? 'Salir pantalla completa' : 'Pantalla completa'}
-        >
-          {isFullscreen ? (
-            <svg className={`${iconClass} ${compact ? 'portrait:!size-[clamp(12px,3vh,16px)]' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="4 14 10 14 10 20" />
-              <polyline points="20 14 14 14 14 20" />
-              <polyline points="14 10 14 4 20 4" />
-              <polyline points="10 10 10 4 4 4" />
-            </svg>
-          ) : (
-            <svg className={`${iconClass} ${compact ? 'portrait:!size-[clamp(12px,3vh,16px)]' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="21" y1="3" x2="14" y2="10" />
-              <polyline points="9 21 3 21 3 15" />
-              <line x1="3" y1="21" x2="10" y2="14" />
-            </svg>
-          )}
-        </button>
+        <div className="relative group">
+          <button
+            onClick={toggleFullscreen}
+            className={`${btnClass} ${compact ? 'portrait:!size-[clamp(24px,6vh,34px)]' : ''}`}
+            style={glassStyle}
+            aria-label={isFullscreen ? 'Salir pantalla completa' : 'Pantalla completa'}
+          >
+            {isFullscreen ? (
+              <svg className={`${iconClass} ${compact ? 'portrait:!size-[clamp(12px,3vh,16px)]' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 14 14 14 14 20" />
+                <polyline points="14 10 14 4 20 4" />
+                <polyline points="10 10 10 4 4 4" />
+              </svg>
+            ) : (
+              <svg className={`${iconClass} ${compact ? 'portrait:!size-[clamp(12px,3vh,16px)]' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            )}
+          </button>
+          <span
+            className="pointer-events-none absolute right-0 top-[calc(100%+8px)] whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+            style={glassStyle}
+          >
+            {isFullscreen ? 'Salir pantalla' : 'Pantalla completa'}
+          </span>
+        </div>
       </div>
 
       {/* ── Mobile portrait: bottom tab bar ── */}
