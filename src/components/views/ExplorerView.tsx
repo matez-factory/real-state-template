@@ -203,7 +203,7 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
         <SiblingNavigator
           siblings={siblings}
           currentLayerId={activeLayerId ?? currentLayer.id}
-          label={currentLabel}
+          label="Nivel"
           onSelect={handleSiblingSelect}
           projectName={project.name}
           logoUrl={logos[0]?.url ?? undefined}

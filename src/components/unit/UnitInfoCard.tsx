@@ -20,6 +20,7 @@ const outerGlassStyle: React.CSSProperties = {
   WebkitBackdropFilter: 'blur(50px)',
   boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   borderRadius: '28px',
+  border: '1.4px solid rgba(255, 255, 255, 0.4)',
 };
 
 const innerCardStyle: React.CSSProperties = {
@@ -36,10 +37,11 @@ const poppins = "'Poppins', system-ui, sans-serif";
 interface UnitInfoCardProps {
   layer: Layer;
   thumbnailUrl?: string;
+  accentColor?: string;
   onContact: () => void;
 }
 
-export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardProps) {
+export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: UnitInfoCardProps) {
   const {
     label, status, unitTypeName, price,
     area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
@@ -58,9 +60,6 @@ export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardPro
 
     if (area && area > 0) {
       rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
-    }
-    if (areaSqft) {
-      rows.push({ icon: Ruler, text: `Área Total ${areaSqft.toLocaleString('en-US', { minimumFractionDigits: 2 })} Sqft` });
     }
     if (bedrooms != null) {
       rows.push({ icon: BedDouble, text: `${bedrooms} Recámara${bedrooms !== 1 ? 's' : ''}` });
@@ -128,7 +127,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardPro
             {priceFormatted && (
               <span
                 className="text-[24px] font-semibold leading-[36px] uppercase flex-shrink-0 whitespace-nowrap"
-                style={{ color: '#1A1A1A', fontFamily: poppins }}
+                style={{ color: accentColor || '#1A1A1A', fontFamily: poppins }}
               >
                 {priceFormatted}
               </span>
@@ -138,14 +137,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardPro
           {/* Instalaciones — Figma: Poppins 500 16px #484848, top:283 */}
           {featureRows.length > 0 && (
             <>
-              <h3
-                className="text-[16px] font-medium leading-[24px] capitalize mt-[12px] mb-[8px]"
-                style={{ color: '#484848', fontFamily: poppins }}
-              >
-                Instalaciones
-              </h3>
-              {/* Feature rows — Figma: icon at left:47 (offset ~11px from inner card left:36), text at left:75, 27px apart */}
-              <div className="flex flex-col gap-[6px]">
+              <div className="flex flex-col gap-[6px] mt-[12px]">
                 {featureRows.map((row, i) => (
                   <UnitFeatureRow key={i} icon={row.icon} text={row.text} />
                 ))}
@@ -162,7 +154,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, onContact }: UnitInfoCardPro
           <button
             onClick={onContact}
             className="w-[254px] mx-auto h-[42px] flex items-center justify-center rounded-[69px] transition-opacity hover:opacity-90 outline-none"
-            style={{ background: '#1A1A1A' }}
+            style={{ background: accentColor || '#1A1A1A' }}
           >
             <span
               className="text-[20px] font-medium leading-[30px] capitalize"

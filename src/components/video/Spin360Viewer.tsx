@@ -23,12 +23,6 @@ interface Spin360ViewerProps {
   hotspotMarkerId?: string;
   onViewpointChange?: (id: string) => void;
   onTransitionChange?: (isTransitioning: boolean) => void;
-  /** Project name shown in the hotspot card */
-  projectName?: string;
-  /** Logo URL shown in the hotspot card */
-  projectLogoUrl?: string;
-  /** Accent color from project (used in hotspot card button) */
-  accentColor?: string;
 }
 
 export interface Spin360ViewerRef {
@@ -49,9 +43,6 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   hotspotMarkerId,
   onViewpointChange,
   onTransitionChange,
-  projectName,
-  projectLogoUrl,
-  accentColor,
 }: Spin360ViewerProps, ref: React.Ref<Spin360ViewerRef>) {
   const viewpointOrder = useMemo(() => {
     return media
@@ -344,12 +335,10 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
               });
             }
 
-            if (isMobile) {
-              shape.addEventListener('click', (e) => {
-                e.stopPropagation();
-                handleEnterBuilding();
-              });
-            }
+            shape.addEventListener('click', (e) => {
+              e.stopPropagation();
+              handleEnterBuilding();
+            });
           });
         }
       })
@@ -513,7 +502,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
         </>
       )}
 
-      {/* Hotspot card — desktop only, positioned on SVG hover */}
+      {/* Hotspot tooltip — desktop only, positioned on SVG hover */}
       {hotspotCard.visible && (
         <div
           ref={hotspotCardRef}
@@ -535,52 +524,21 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
             setHotspotCard((prev) => ({ ...prev, visible: false }));
           }}
         >
-          {/* White dot with gray ring — 32×32 */}
-          <div
-            className="w-[32px] h-[32px] rounded-full flex items-center justify-center shrink-0"
-            style={{
-              background: 'rgba(128, 128, 128, 0.23)',
-              border: '1.4px solid white',
-              backdropFilter: 'blur(50px)',
-              WebkitBackdropFilter: 'blur(50px)',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <div className="w-[20px] h-[20px] rounded-full bg-white" />
-          </div>
-
-          {/* Card — gray glass outer border, white inner with everything */}
-          <div
-            className="mt-[6px] w-[168px] rounded-[10px] p-[6px]"
+          {/* Tooltip — glass pill */}
+          <button
+            onClick={handleEnterBuilding}
+            className="px-[18px] py-[10px] rounded-[14px] text-[14px] font-semibold text-white hover:opacity-90 transition-opacity outline-none cursor-pointer"
             style={{
               background: 'rgba(214, 214, 214, 0.45)',
               backgroundBlendMode: 'luminosity',
               backdropFilter: 'blur(50px)',
               WebkitBackdropFilter: 'blur(50px)',
-              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+              boxShadow: 'inset 0px 0px 16px rgba(255, 255, 255, 0.05), inset 0px 4px 4px rgba(255, 255, 255, 0.15), 0px 2px 4px rgba(0, 0, 0, 0.1)',
+              border: '1.4px solid rgba(255, 255, 255, 0.4)',
             }}
           >
-            {/* White inner — logo + name + button all inside */}
-            <div className="w-full rounded-[8px] bg-white/90 flex flex-col items-center pt-[14px] pb-[10px] px-[10px]">
-              {projectLogoUrl && (
-                <img src={projectLogoUrl} alt="" className="w-[36px] h-[36px] object-contain mb-[6px]" />
-              )}
-              {projectName && (
-                <span className="text-[12px] font-normal text-[#5A5A5A] tracking-[0.08em] mb-[10px]">
-                  {projectName.toUpperCase()}
-                </span>
-              )}
-              <button
-                onClick={handleEnterBuilding}
-                style={accentColor ? { backgroundColor: accentColor } : undefined}
-                className={`w-full h-[36px] rounded-full text-[13px] font-medium flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity outline-none ${
-                  accentColor ? 'text-white' : 'bg-[#1A1A1A] text-white'
-                }`}
-              >
-                Ingresar &rarr;
-              </button>
-            </div>
-          </div>
+            Ingresar &rarr;
+          </button>
         </div>
       )}
 
