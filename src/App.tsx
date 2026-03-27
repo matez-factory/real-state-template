@@ -147,7 +147,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<'loading' | 'fadeout' | 'done'>('loading');
   const [progress, setProgress] = useState(0);
-  const [projectName, setProjectName] = useState(PROJECT_SLUG.toUpperCase());
+  const [, setProjectName] = useState(PROJECT_SLUG.toUpperCase());
 
   // Intro video overlay state — lives at App level so it persists across route changes
   const [introVideo, setIntroVideo] = useState<{ url: string; targetPath: string } | null>(null);

@@ -23,12 +23,6 @@ interface Spin360ViewerProps {
   hotspotMarkerId?: string;
   onViewpointChange?: (id: string) => void;
   onTransitionChange?: (isTransitioning: boolean) => void;
-  /** Project name shown in the hotspot card */
-  projectName?: string;
-  /** Logo URL shown in the hotspot card */
-  projectLogoUrl?: string;
-  /** Accent color from project (used in hotspot card button) */
-  accentColor?: string;
 }
 
 export interface Spin360ViewerRef {
@@ -49,9 +43,6 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   hotspotMarkerId,
   onViewpointChange,
   onTransitionChange,
-  projectName,
-  projectLogoUrl,
-  accentColor,
 }: Spin360ViewerProps, ref: React.Ref<Spin360ViewerRef>) {
   const viewpointOrder = useMemo(() => {
     return media

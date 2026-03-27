@@ -16,15 +16,6 @@ interface ProjectHomePageProps {
 
 type ActiveView = 'tour' | 'location';
 
-/* Glass style — Figma: rgba(128,128,128,0.23), luminosity, blur 50, shadow, NO border */
-const glassStyle: React.CSSProperties = {
-  background: 'rgba(128, 128, 128, 0.23)',
-  backgroundBlendMode: 'luminosity',
-  backdropFilter: 'blur(50px)',
-  WebkitBackdropFilter: 'blur(50px)',
-  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-  border: '1.4px solid rgba(255, 255, 255, 0.18)',
-};
 
 export function ProjectHomePage({ data }: ProjectHomePageProps) {
   const navigate = useNavigate();
@@ -121,9 +112,6 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
             hideSvgOverlay={false}
             hotspotTowerId="_none"
             hotspotMarkerId="_none"
-            projectName={project.name}
-            projectLogoUrl={logos[0]?.url ?? undefined}
-            accentColor={project.accentColor ?? undefined}
             onViewpointChange={handleViewpointChange}
             onTransitionChange={handleTransitionChange}
             onEnterBuilding={() => {
