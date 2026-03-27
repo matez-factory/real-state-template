@@ -81,7 +81,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
   // From the tour/home page, back always goes to splash
   const backUrl = '/';
 
-  const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
+  const handleNavigate = (section: string) => {
     if (section === 'home') {
       // Already on the home page — just switch back to tour view
       setActiveView('tour');
@@ -126,6 +126,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
                   count={viewpointCount}
                   activeIndex={viewpointIndex}
                   className="absolute bottom-[clamp(16px,3vh,28px)] left-1/2 -translate-x-1/2 z-30 portrait:bottom-[110px]"
+                  small
                 />
               );
             }}
@@ -139,7 +140,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
           isTourActive
           isTransitioning={false}
           currentSceneId={currentViewpoint}
-          pillMessage="Tocá el edificio para explorar"
+          pillMessage="Deslizá para ver la imagen completa"
         />
       )}
 
@@ -155,6 +156,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
               ? () => setActiveView('tour')
               : () => navigate(backUrl)
             }
+            compact
           />
 
           {/* Social icons — bottom right */}

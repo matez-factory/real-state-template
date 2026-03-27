@@ -102,7 +102,7 @@ export function LotsExplorerView({
   const homeUrl = getHomeUrl(data);
   const backUrl = getBackUrl(data);
 
-  const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
+  const handleNavigate = (section: string) => {
     if (selectedLotId) {
       setSelectedLotId(null);
       history.pushState(null, '', `/${data.currentPath.join('/')}`);

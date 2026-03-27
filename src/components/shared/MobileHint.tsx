@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { Hand, X, MoveHorizontal } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useIsMobilePortrait } from '@/hooks/useIsMobilePortrait';
 
 interface MobileHintProps {
@@ -13,82 +12,52 @@ export function MobileHint({
   isTourActive,
   isTransitioning,
   currentSceneId,
-  pillMessage = 'Tocá las manzanas para explorar',
+  pillMessage = 'Deslizá para ver la imagen completa',
 }: MobileHintProps) {
   const [showPill, setShowPill] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const panoramaHintShown = useRef(false);
   const isMobilePortrait = useIsMobilePortrait();
-
-  const isPortraitTour = isMobilePortrait && isTourActive;
-
-  useEffect(() => {
-    if (!isPortraitTour || isTransitioning || panoramaHintShown.current) return;
-
-    panoramaHintShown.current = true;
-    const showTimer = setTimeout(() => setShowOverlay(true), 400);
-    const hideTimer = setTimeout(() => setShowOverlay(false), 3500);
-
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [isPortraitTour, isTransitioning]);
 
   useEffect(() => {
     setShowPill(false);
-    const isMobile = window.innerWidth <= 1280;
 
-    if (isMobile && isTourActive) {
-      const showTimer = setTimeout(() => setShowPill(true), 800);
-      const hideTimer = setTimeout(() => setShowPill(false), 4500);
+    if (isMobilePortrait && isTourActive && !isTransitioning) {
+      const showTimer = setTimeout(() => setShowPill(true), 400);
+      const hideTimer = setTimeout(() => setShowPill(false), 5000);
 
       return () => {
         clearTimeout(showTimer);
         clearTimeout(hideTimer);
       };
     }
-  }, [currentSceneId, isTourActive]);
+  }, [currentSceneId, isTourActive, isMobilePortrait, isTransitioning]);
+
+  if (!showPill) return null;
 
   return (
-    <>
-      {showOverlay && isPortraitTour && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center animate-fade-in pointer-events-none">
-          <div className="relative bg-black/80 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center gap-4 max-w-[260px] pointer-events-auto">
-            <button
-              onClick={() => setShowOverlay(false)}
-              className="absolute top-3 right-3 text-white/50 hover:text-white/80 transition-colors outline-none"
-              aria-label="Cerrar"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="relative flex items-center gap-3">
-              <MoveHorizontal className="w-5 h-5 text-white/60 animate-pulse" />
-              <Hand className="w-12 h-12 text-white/90" />
-              <MoveHorizontal className="w-5 h-5 text-white/60 animate-pulse" />
-            </div>
-
-            <div className="text-center">
-              <p className="text-white font-medium text-sm">
-                Deslizá hacia los laterales
-              </p>
-              <p className="text-white/50 text-xs mt-1">
-                para ver la imagen completa.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPill && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in xl:hidden">
-          <div className="lots-glass rounded-full shadow-lg px-3 py-1.5 flex items-center gap-2 text-white text-xs">
-            <Hand className="w-3 h-3 animate-pulse" />
-            <span>{pillMessage}</span>
-          </div>
-        </div>
-      )}
-    </>
+    <div className="absolute bottom-[180px] left-1/2 -translate-x-1/2 z-40 animate-fade-in portrait:block hidden">
+      <div
+        className="rounded-full px-[12px] py-[6px] flex items-center gap-[6px] text-white text-[12px] font-medium whitespace-nowrap"
+        style={{
+          background: 'rgba(128, 128, 128, 0.23)',
+          backgroundBlendMode: 'luminosity',
+          backdropFilter: 'blur(50px)',
+          WebkitBackdropFilter: 'blur(50px)',
+          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        {/* Swipe hand icon — matches Figma */}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Hand */}
+          <path d="M12 14V4.5a1.5 1.5 0 0 1 3 0V10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 14V6.5a1.5 1.5 0 0 1 3 0" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15 10.5V10a1.5 1.5 0 0 1 3 0v4a6 6 0 0 1-6 6H9.5A5.5 5.5 0 0 1 4 14.5V12.5a1.5 1.5 0 0 1 3 0V14" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Left arrow */}
+          <path d="M2 10L0.5 11.5L2 13" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Right arrow */}
+          <path d="M22 10L23.5 11.5L22 13" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span>{pillMessage}</span>
+      </div>
+    </div>
   );
 }

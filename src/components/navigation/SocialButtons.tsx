@@ -15,14 +15,14 @@ const btnStyle: React.CSSProperties = {
 
 /* Same clamp range as GlassArrows so bottom bar stays aligned */
 const btnClass =
-  'flex items-center justify-center size-[clamp(36px,3.5vw,44px)] rounded-full outline-none transition-opacity hover:opacity-80';
-const iconClass = 'size-[clamp(18px,1.6vw,24px)]';
+  'flex items-center justify-center size-[clamp(28px,7vh,44px)] rounded-full outline-none transition-opacity hover:opacity-80';
+const iconClass = 'size-[clamp(14px,4vh,24px)]';
 
 export function SocialButtons({ project }: SocialButtonsProps) {
   if (!project.whatsapp && !project.instagram && !project.website) return null;
 
   return (
-    <div className="absolute bottom-[clamp(16px,3vh,31px)] right-[clamp(20px,2.5vw,35px)] z-40 hidden lg:flex items-center gap-[clamp(12px,1.2vw,18px)]">
+    <div className="absolute bottom-[clamp(8px,3vh,31px)] right-[clamp(12px,2.5vw,35px)] z-40 hidden landscape:flex items-center gap-[clamp(8px,1.2vw,18px)]">
       {project.whatsapp && (
         <a
           href={`https://wa.me/${project.whatsapp.replace(/\D/g, '')}`}

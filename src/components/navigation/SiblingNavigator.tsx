@@ -59,9 +59,9 @@ export function SiblingNavigator({
 
   return (
     <aside
-      className="hidden lg:flex absolute left-[47px] top-[116px] z-40 flex-col rounded-[20px] w-[114px] overflow-hidden"
+      className="hidden landscape:flex absolute left-[clamp(10px,3vw,47px)] top-[clamp(50px,14vh,116px)] z-40 flex-col rounded-[clamp(10px,3vh,20px)] w-[clamp(68px,10vw,114px)] overflow-hidden"
       style={{
-        height: 'calc(100vh - 116px - 48px)',
+        height: 'calc(100vh - clamp(60px,15vh,116px) - clamp(20px,5vh,48px))',
         maxHeight: '614px',
         background: 'rgba(214, 214, 214, 0.45)',
         backgroundBlendMode: 'luminosity',
@@ -72,20 +72,20 @@ export function SiblingNavigator({
       }}
     >
       {/* Header: logo + name + "Nivel" on the glass bg */}
-      <div className="flex flex-col items-center pt-[10px] pb-[8px] px-2 flex-shrink-0">
+      <div className="flex flex-col items-center pt-[clamp(6px,2vh,10px)] pb-[clamp(4px,1.5vh,8px)] px-2 flex-shrink-0">
         {logoUrl && (
           <img
             src={logoUrl}
             alt={projectName ?? ''}
-            className="h-[32px] w-[30px] object-contain mb-[2px]"
+            className="h-[clamp(20px,5vh,32px)] w-auto object-contain mb-[2px]"
           />
         )}
         <p
           style={{
             fontFamily: "'Poppins', system-ui, sans-serif",
             fontWeight: 400,
-            fontSize: '12px',
-            lineHeight: '18px',
+            fontSize: 'clamp(9px, 2.5vh, 12px)',
+            lineHeight: '1.5',
             color: '#FFFFFF',
             textTransform: 'capitalize',
             textAlign: 'center',
@@ -94,12 +94,12 @@ export function SiblingNavigator({
           {projectName}
         </p>
         <p
-          className="mt-[4px]"
+          className="mt-[clamp(2px,0.5vh,4px)]"
           style={{
             fontFamily: "'Poppins', system-ui, sans-serif",
             fontWeight: 300,
-            fontSize: '14px',
-            lineHeight: '28px',
+            fontSize: 'clamp(10px, 3vh, 14px)',
+            lineHeight: '2',
             color: '#FFFFFF',
             textTransform: 'capitalize',
           }}
@@ -108,11 +108,11 @@ export function SiblingNavigator({
         </p>
       </div>
 
-      {/* Number list area + scrollbar — padding 20px matches ficha padding from Figma */}
-      <div className="relative flex-1 min-h-0 flex pb-[20px] pr-[20px] pl-[25px] gap-[12px]">
-        {/* White background for number list — 63px wide, Rectangle 36 from Figma */}
+      {/* Number list area + scrollbar */}
+      <div className="relative flex-1 min-h-0 flex pb-[clamp(6px,2vh,20px)] pr-[clamp(6px,1vw,20px)] pl-[clamp(8px,1.5vw,25px)] gap-[clamp(4px,0.8vw,12px)]">
+        {/* White background for number list */}
         <div
-          className="flex-shrink-0 w-[63px] min-h-0 rounded-[10px] overflow-hidden"
+          className="flex-shrink-0 w-[clamp(38px,6vw,63px)] min-h-0 rounded-[clamp(6px,1.5vh,10px)] overflow-hidden"
           style={{
             background: 'rgba(255, 255, 255, 0.7)',
             backdropFilter: 'blur(14px)',
@@ -135,11 +135,11 @@ export function SiblingNavigator({
                   onClick={() => onSelect(sibling)}
                   className="outline-none block w-full"
                   style={{
-                    height: '39px',
-                    lineHeight: '39px',
+                    height: 'clamp(22px, 6vh, 39px)',
+                    lineHeight: 'clamp(22px, 6vh, 39px)',
                     textAlign: 'center',
                     fontFamily: "'Poppins', system-ui, sans-serif",
-                    fontSize: '16px',
+                    fontSize: 'clamp(10px, 2.8vh, 16px)',
                     fontWeight: 600,
                     color: '#707070',
                     background: isCurrent ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
