@@ -179,8 +179,8 @@ export function InteractiveSVG({
       let hoverFired = false;
       const onEnter = () => {
         if (isBuilding) {
-          /* Figma: Rectangle 1308 — rgba(52,90,216,0.15) highlight on SVG path */
-          const hoverFill = 'rgba(52, 90, 216, 0.15)';
+          /* Highlight sobre la unidad (antes Figma azul rgba(52,90,216,0.15)) */
+          const hoverFill = 'rgba(255, 255, 255, 0.4)';
           element.style.setProperty('fill', hoverFill, 'important');
           element.querySelectorAll('*').forEach((c) => {
             (c as SVGElement).style.setProperty('fill', hoverFill, 'important');

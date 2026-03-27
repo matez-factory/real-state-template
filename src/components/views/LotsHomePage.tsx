@@ -63,7 +63,7 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
 
   const isHomeLayer = data.currentLayer?.id === data.rootLayers[0]?.id;
 
-  const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
+  const handleNavigate = (section: string) => {
     if (section === 'home') {
       if (isHomeLayer) {
         setActiveView('tour');

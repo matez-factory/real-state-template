@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
+import { RotateDeviceOverlay } from '@/components/shared/RotateDeviceOverlay';
 
 interface BuildingSplashPageProps {
   data: ExplorerPageData;
@@ -77,29 +78,29 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
         />
       )}
 
-      {/* Content — Portrait: centered at ~40% top. Landscape: left-aligned, bottom 23.3% */}
+      {/* Content — Portrait: centered at ~40% top. Landscape: left-aligned, bottom */}
       <div className="
         absolute z-10 flex flex-col
         portrait:items-center portrait:left-0 portrait:right-0 portrait:top-[38%]
-        landscape:left-[clamp(24px,4vw,71px)] landscape:bottom-[23.3%] landscape:items-start
+        landscape:left-[clamp(16px,4vw,71px)] landscape:bottom-[6vh] xl:landscape:bottom-[23.3%] landscape:items-start
       ">
-        {/* Logo — Desktop: 84×89, Mobile: 70×74, small landscape: 60×64 */}
+        {/* Logo */}
         {logoUrl && (
           <img
             src={logoUrl}
             alt={project.name}
-            className="object-contain mb-[8px] portrait:w-[70px] portrait:h-[74px] landscape:w-[clamp(60px,6vw,84px)] landscape:h-auto"
+            className="object-contain mb-[clamp(4px,1vh,8px)] portrait:w-[70px] portrait:h-[74px] landscape:w-[clamp(36px,6vw,84px)] landscape:h-auto"
           />
         )}
 
-        {/* Project name — Figma: Poppins 400 48px, line-height 72px, capitalize, #FFFFFF */}
-        <h1 className="font-normal text-white leading-[1.5] tracking-[0px] capitalize portrait:text-[36px] landscape:text-[clamp(28px,4vw,48px)]">
+        {/* Project name */}
+        <h1 className="font-normal text-white leading-[1.3] tracking-[0px] capitalize portrait:text-[36px] landscape:text-[clamp(18px,4vw,48px)]">
           {project.name}
         </h1>
 
-        {/* Location — Figma: Poppins 300 24px, line-height 36px, capitalize, #D5D5D5 */}
+        {/* Location */}
         {location && (
-          <p className="mt-[15px] font-light text-[#D5D5D5] leading-[1.5] tracking-[0px] capitalize portrait:text-[24px] landscape:text-[clamp(16px,2vw,24px)]">
+          <p className="mt-[clamp(4px,1.5vh,15px)] font-light text-[#D5D5D5] leading-[1.5] tracking-[0px] capitalize portrait:text-[24px] landscape:text-[clamp(12px,2vw,24px)]">
             {location}
           </p>
         )}
@@ -109,20 +110,20 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
           <button
             onClick={handleEnter}
             style={hasAccent ? { backgroundColor: project.accentColor, color: '#FFFFFF' } : undefined}
-            className={`mt-[18px] h-[52px] rounded-[69px] text-[20px] font-medium leading-[30px] capitalize transition-opacity duration-200 hover:opacity-90 outline-none portrait:w-[217px] landscape:w-[clamp(200px,25vw,340px)] flex items-center justify-center bg-white ${
+            className={`mt-[clamp(8px,2vh,18px)] h-[clamp(36px,9vh,52px)] rounded-[69px] text-[clamp(14px,2vw,20px)] font-medium leading-[30px] capitalize transition-opacity duration-200 hover:opacity-90 outline-none portrait:w-[217px] landscape:w-[clamp(160px,22vw,340px)] flex items-center justify-center bg-white ${
               hasAccent ? '' : 'text-[#1A1A1A]'
             }`}
           >
             <span>Ingresar</span>
-            <span className="relative ml-[8px] w-[30px] h-[29px] flex items-center justify-center">
+            <span className="relative ml-[8px] w-[clamp(22px,2.5vw,30px)] h-[clamp(21px,2.5vw,29px)] flex items-center justify-center">
               <svg width="18" height="17" viewBox="0 0 18 17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 8.5H14M14 8.5L9 3.5M14 8.5L9 13.5" />
               </svg>
             </span>
           </button>
         ) : (
-          <div className="mt-[18px] flex flex-col items-center portrait:items-center landscape:items-start gap-[6px] portrait:w-[217px] landscape:w-[clamp(200px,25vw,340px)]">
-            <p className="text-[clamp(11px,1vw,14px)] text-white/60 font-light">
+          <div className="mt-[clamp(8px,2vh,18px)] flex flex-col items-center portrait:items-center landscape:items-start gap-[6px] portrait:w-[217px] landscape:w-[clamp(160px,22vw,340px)]">
+            <p className="text-[clamp(10px,1vw,14px)] text-white/60 font-light">
               Cargando la experiencia 3D...
             </p>
             <div className="w-full h-[4px] rounded-full bg-white/15 overflow-hidden">
@@ -141,7 +142,7 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
 
       {/* Social icons — bottom right, desktop only (hidden in portrait) */}
       {(project.whatsapp || project.instagram || project.facebook || project.youtube || project.website) && (
-        <div className="absolute bottom-[31px] right-[35px] z-10 items-center gap-[18px] portrait:hidden landscape:flex">
+        <div className="absolute bottom-[clamp(8px,4vh,31px)] right-[clamp(12px,2vw,35px)] z-10 items-center gap-[clamp(8px,1.5vw,18px)] portrait:hidden landscape:flex">
           {project.whatsapp && (
             <SocialIcon href={`https://wa.me/${project.whatsapp.replace(/[^0-9+]/g, '')}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -177,6 +178,9 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
           )}
         </div>
       )}
+
+      {/* Portrait: rotate device overlay */}
+      <RotateDeviceOverlay backgroundUrl={backgroundUrl} logoUrl={logoUrl} />
     </div>
   );
 }
@@ -187,7 +191,7 @@ function SocialIcon({ href, children }: { href: string; children: React.ReactNod
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="w-[43px] h-[44px] rounded-[100px] flex items-center justify-center text-white/80 hover:text-white transition-colors [&_svg]:w-[24px] [&_svg]:h-[24px]"
+      className="w-[clamp(30px,7vh,43px)] h-[clamp(30px,7vh,44px)] rounded-[100px] flex items-center justify-center text-white/80 hover:text-white transition-colors [&_svg]:w-[clamp(16px,4vh,24px)] [&_svg]:h-[clamp(16px,4vh,24px)]"
       style={{
         background: 'rgba(128, 128, 128, 0.23)',
         backgroundBlendMode: 'luminosity',
