@@ -25,29 +25,38 @@ interface GlassArrowsProps {
   /** Current active index (for progress dots). */
   activeIndex?: number;
   className?: string;
+  /** Smaller variant for portrait mobile */
+  small?: boolean;
 }
 
-export function GlassArrows({ onPrev, onNext, count = 0, activeIndex = 0, className = '' }: GlassArrowsProps) {
+export function GlassArrows({ onPrev, onNext, count = 0, activeIndex = 0, className = '', small }: GlassArrowsProps) {
+  const btnSize = small
+    ? 'size-[clamp(28px,8vh,44px)] portrait:size-[32px]'
+    : 'size-[clamp(28px,8vh,44px)]';
+  const iconSize = small
+    ? 'size-[clamp(14px,4vh,20px)] portrait:size-[14px]'
+    : 'size-[clamp(14px,4vh,20px)]';
+
   return (
     <div className={`flex flex-col items-center gap-[clamp(12px,1.5vh,18px)] ${className}`}>
-      <div className="flex items-center gap-[clamp(16px,1.5vw,21px)]">
+      <div className="flex items-center gap-[clamp(10px,1.5vw,21px)]">
         <button
           onClick={onPrev}
-          className="size-[clamp(36px,3.5vw,44px)] rounded-full flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+          className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-white transition-colors outline-none`}
           style={glassStyle}
           aria-label="Anterior"
         >
-          <svg className="size-[clamp(16px,1.5vw,20px)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <button
           onClick={onNext}
-          className="size-[clamp(36px,3.5vw,44px)] rounded-full flex items-center justify-center text-white hover:text-white transition-colors outline-none"
+          className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-white transition-colors outline-none`}
           style={glassStyle}
           aria-label="Siguiente"
         >
-          <svg className="size-[clamp(16px,1.5vw,20px)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 6 15 12 9 18" />
           </svg>
         </button>

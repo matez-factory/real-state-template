@@ -19,7 +19,7 @@ type ActiveView = 'tour' | 'location';
 
 export function ProjectHomePage({ data }: ProjectHomePageProps) {
   const navigate = useNavigate();
-  const { project, media, children } = data;
+  const { project, media, children, siblings } = data;
 
   const spinRef = useRef<Spin360ViewerRef>(null);
   const [activeView, setActiveView] = useState<ActiveView>('tour');
@@ -67,21 +67,25 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
   }, [viewpointOrder]);
 
   const mapTarget = useMemo(() => {
-    if (children.length > 0) {
-      return `/${data.currentPath.join('/')}/${children[0].slug}`;
+    // For building projects: siblings are the floors (current layer is the "tour" layer)
+    // Pick the highest floor (last non-tour sibling, sorted low→high)
+    const floors = siblings.filter((s) => s.type !== 'tour');
+    if (floors.length > 0) {
+      const target = floors[floors.length - 1];
+      return `/${target.slug}`;
     }
-    const currentId = data.currentLayer?.id;
-    const zoneSibling = data.siblings.find((s) => s.id !== currentId);
-    if (zoneSibling) {
-      return `/${zoneSibling.slug}`;
+    if (children.length > 0) {
+      const childFloors = children.filter((c) => c.type !== 'tour');
+      const target = childFloors.length > 0 ? childFloors[childFloors.length - 1] : children[0];
+      return `/${data.currentPath.join('/')}/${target.slug}`;
     }
     return null;
-  }, [data.currentPath, children, data.currentLayer, data.siblings]);
+  }, [data.currentPath, children, siblings]);
 
   // From the tour/home page, back always goes to splash
   const backUrl = '/';
 
-  const handleNavigate = (section: 'home' | 'map' | 'location' | 'contact') => {
+  const handleNavigate = (section: string) => {
     if (section === 'home') {
       // Already on the home page — just switch back to tour view
       setActiveView('tour');
@@ -126,6 +130,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
                   count={viewpointCount}
                   activeIndex={viewpointIndex}
                   className="absolute bottom-[clamp(16px,3vh,28px)] left-1/2 -translate-x-1/2 z-30 portrait:bottom-[110px]"
+                  small
                 />
               );
             }}
@@ -139,7 +144,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
           isTourActive
           isTransitioning={false}
           currentSceneId={currentViewpoint}
-          pillMessage="Tocá el edificio para explorar"
+          pillMessage="Deslizá para ver la imagen completa"
         />
       )}
 
@@ -155,6 +160,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
               ? () => setActiveView('tour')
               : () => navigate(backUrl)
             }
+            compact
           />
 
           {/* Social icons — bottom right */}
