@@ -65,7 +65,7 @@ export function MobileUnitSheet({
   const featureRows = useMemo(() => {
     const rows: { icon: typeof Ruler; text: string }[] = [];
     if (area && area > 0) rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
-    if (bedrooms != null) rows.push({ icon: BedDouble, text: `${bedrooms} Recámara${bedrooms !== 1 ? 's' : ''}` });
+    if (bedrooms != null) rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
     if (bathrooms != null) rows.push({ icon: Bath, text: `${bathrooms} Baño${bathrooms !== 1 ? 's' : ''}` });
     if (hasBalcony) rows.push({ icon: Fence, text: 'Balcón' });
     if (features) {
