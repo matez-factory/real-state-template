@@ -171,10 +171,10 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
           >
             <div
               ref={mapScrollRef}
-              className="absolute inset-0 portrait:overflow-x-auto portrait:overflow-y-hidden landscape:overflow-hidden xl:overflow-hidden"
+              className={`absolute inset-0 landscape:overflow-hidden xl:overflow-hidden ${backgroundMobileUrl ? 'portrait:overflow-hidden' : 'portrait:overflow-x-auto portrait:overflow-y-hidden'}`}
             >
               <div
-                className="relative h-full w-full portrait:w-[170vw] xl:w-full origin-center transition-transform duration-150"
+                className={`relative h-full w-full xl:w-full origin-center transition-transform duration-150 ${backgroundMobileUrl ? '' : 'portrait:w-[170vw]'}`}
                 style={mapScale !== 1 ? { transform: `scale(${mapScale})` } : undefined}
               >
                 {backgroundUrl && (
