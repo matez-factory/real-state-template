@@ -88,7 +88,7 @@ export function TopNav({
     <>
       {/* ── Left side: Back + optional Home ── */}
       {showBack && onBack && (
-        <div className="absolute top-[clamp(16px,2.5vh,32px)] left-[clamp(20px,3vw,47px)] z-40 hidden landscape:flex items-center gap-[clamp(8px,0.8vw,13px)] portrait:flex portrait:top-[46px] portrait:left-[33px]">
+        <div className="absolute top-[clamp(16px,2.5vh,32px)] left-[clamp(20px,3vw,47px)] z-50 hidden landscape:flex items-center gap-[clamp(8px,0.8vw,13px)] portrait:flex portrait:top-[46px] portrait:left-[33px]">
           <button
             onClick={onBack}
             className={`${btnClass} ${compact ? 'portrait:!size-[clamp(24px,6vh,34px)]' : ''}`}

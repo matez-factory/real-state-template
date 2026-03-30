@@ -160,6 +160,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
               ? () => setActiveView('tour')
               : () => navigate(backUrl)
             }
+            hideMobileNav={activeView === 'location'}
             compact
           />
 

@@ -62,7 +62,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
       rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
     }
     if (bedrooms != null) {
-      rows.push({ icon: BedDouble, text: `${bedrooms} Recámara${bedrooms !== 1 ? 's' : ''}` });
+      rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
     }
     if (bathrooms != null) {
       rows.push({ icon: Bath, text: `${bathrooms} Baño${bathrooms !== 1 ? 's' : ''}` });
