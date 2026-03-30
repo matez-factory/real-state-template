@@ -140,6 +140,9 @@ export interface RawUnitType {
   bedrooms: number | null;
   bathrooms: number | null;
   description: string | null;
+  has_balcony: boolean | null;
+  orientation: string | null;
+  features: { icon: string; text: string }[] | null;
 }
 
 // ============================================================
@@ -281,11 +284,21 @@ export function buildExplorerPageData(
 ): ExplorerPageData {
   const project = transformProject(rawProject);
 
-  const unitTypeMap = new Map(rawUnitTypes.map(ut => [ut.id, ut.name]));
+  const unitTypeMap = new Map(rawUnitTypes.map(ut => [ut.id, ut]));
   const allLayers = rawLayers.map(raw => {
     const layer = transformLayer(raw);
-    if (layer.unitTypeId && !layer.unitTypeName) {
-      layer.unitTypeName = unitTypeMap.get(layer.unitTypeId);
+    if (layer.unitTypeId) {
+      const ut = unitTypeMap.get(layer.unitTypeId);
+      if (ut) {
+        if (!layer.unitTypeName) layer.unitTypeName = ut.name;
+        // Fallback: unit_type fills in missing layer fields
+        if (layer.bedrooms == null && ut.bedrooms != null) layer.bedrooms = ut.bedrooms;
+        if (layer.bathrooms == null && ut.bathrooms != null) layer.bathrooms = ut.bathrooms;
+        if (layer.description == null && ut.description) layer.description = ut.description;
+        if (layer.hasBalcony == null && ut.has_balcony != null) layer.hasBalcony = ut.has_balcony;
+        if (layer.orientation == null && ut.orientation) layer.orientation = ut.orientation;
+        if ((layer.features == null || layer.features.length === 0) && ut.features && ut.features.length > 0) layer.features = ut.features;
+      }
     }
     return layer;
   });

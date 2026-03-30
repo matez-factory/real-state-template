@@ -193,6 +193,9 @@ export interface UnitType {
   bedrooms?: number;
   bathrooms?: number;
   description?: string;
+  hasBalcony?: boolean;
+  orientation?: string;
+  features?: FeatureItem[];
 }
 
 // ============================================================
