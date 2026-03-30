@@ -97,18 +97,23 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
 
   const viewpoints = useMemo(() => {
     return viewpointOrder.map((id) => {
-      const image = media.find((m) => {
+      // Prefer mobile-specific panorama when in mobile portrait
+      const mobileImage = isMobilePortrait
+        ? media.find((m) => m.type === 'image' && m.purpose === 'gallery_mobile' && (m.metadata as Record<string, unknown>)?.viewpoint === id)
+        : undefined;
+      const desktopImage = media.find((m) => {
         if (m.type !== 'image') return false;
         const meta = m.metadata as Record<string, unknown>;
-        return meta?.viewpoint === id;
+        return meta?.viewpoint === id && m.purpose !== 'gallery_mobile';
       });
-      return { id, image, svgPath: spinSvgs[id] };
+      return { id, image: mobileImage ?? desktopImage, svgPath: spinSvgs[id] };
     });
-  }, [viewpointOrder, media, spinSvgs]);
+  }, [viewpointOrder, media, spinSvgs, isMobilePortrait]);
 
   useEffect(() => {
+    const prefetchPurpose = isMobilePortrait ? 'transition_mobile' : 'transition';
     media.forEach((m) => {
-      if (m.type === 'video' && m.purpose === 'transition' && m.url) {
+      if (m.type === 'video' && (m.purpose === prefetchPurpose || m.purpose === 'transition') && m.url) {
         const link = document.createElement('link');
         link.rel = 'prefetch';
         link.as = 'video';
@@ -116,17 +121,26 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
         document.head.appendChild(link);
       }
     });
-  }, [media]);
+  }, [media, isMobilePortrait]);
 
   const findTransitionVideo = useCallback(
     (from: string, to: string): Media | undefined => {
+      // Prefer mobile-specific transition when in mobile portrait
+      if (isMobilePortrait) {
+        const mobile = media.find((m) => {
+          if (m.type !== 'video' || m.purpose !== 'transition_mobile') return false;
+          const meta = m.metadata as Record<string, unknown>;
+          return meta?.from_viewpoint === from && meta?.to_viewpoint === to;
+        });
+        if (mobile) return mobile;
+      }
       return media.find((m) => {
         if (m.type !== 'video' || m.purpose !== 'transition') return false;
         const meta = m.metadata as Record<string, unknown>;
         return meta?.from_viewpoint === from && meta?.to_viewpoint === to;
       });
     },
-    [media]
+    [media, isMobilePortrait]
   );
 
   const findEntranceVideo = useCallback(
@@ -361,11 +375,6 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   const navigateTo = useCallback(
     (target: string) => {
       if (target === currentViewpoint || phase === 'transitioning') return;
-
-      if (portraitPanorama) {
-        setCurrentViewpoint(target);
-        return;
-      }
 
       const video = findTransitionVideo(currentViewpoint, target);
       if (video?.url) {

@@ -97,8 +97,10 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
   const siblings = useMemo(() => rawSiblings.filter((s) => s.type !== 'tour'), [rawSiblings]);
   const basePath = `${currentPath.length > 0 ? '/' + currentPath.join('/') : ''}`;
   const svgUrl = currentLayer?.svgOverlayUrl ?? project.svgOverlayUrl;
+  const svgMobileUrl = currentLayer?.svgOverlayMobileUrl;
   const showSiblings = siblings.length > 1 && currentLayer != null;
   const backgroundUrl = activeData.media.find((m) => m.purpose === 'background' && m.type === 'image')?.url ?? currentLayer?.backgroundImageUrl;
+  const backgroundMobileUrl = activeData.media.find((m) => m.purpose === 'background_mobile' && m.type === 'image')?.url ?? currentLayer?.backgroundImageMobileUrl;
 
   const logos = useMemo(
     () => media.filter((m) => m.purpose === 'logo' || m.purpose === 'logo_developer'),
@@ -177,14 +179,23 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
                   <img
                     src={backgroundUrl}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className={`absolute inset-0 w-full h-full object-cover ${backgroundMobileUrl ? 'portrait:max-xl:hidden' : ''}`}
+                  />
+                )}
+                {backgroundMobileUrl && (
+                  <img
+                    src={backgroundMobileUrl}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover hidden portrait:max-xl:block"
                   />
                 )}
                 {svgUrl ? (
                   <InteractiveSVG
                     svgUrl={svgUrl}
+                    svgMobileUrl={svgMobileUrl}
                     entities={entityConfigs}
                     backgroundUrl={backgroundUrl}
+                    backgroundMobileUrl={backgroundMobileUrl}
                     variant="building"
                   />
                 ) : (
