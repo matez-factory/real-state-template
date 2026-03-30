@@ -204,7 +204,8 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
           svg.style.width = '100%';
           svg.style.height = '100%';
         } else {
-          svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+          const isMobilePortrait = window.matchMedia('(orientation: portrait) and (max-width: 1279px)').matches;
+          svg.setAttribute('preserveAspectRatio', isMobilePortrait ? 'xMidYMin slice' : 'xMidYMid slice');
           svg.style.position = 'absolute';
           svg.style.inset = '0';
           svg.style.width = '100%';
@@ -378,6 +379,42 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
 
       const video = findTransitionVideo(currentViewpoint, target);
       if (video?.url) {
+        // In portrait panorama, center the scroll before playing video for seamless transition
+        const el = scrollRef.current;
+        if (portraitPanorama && el) {
+          const center = (el.scrollWidth - el.clientWidth) / 2;
+          const needsScroll = Math.abs(el.scrollLeft - center) > 5;
+          if (needsScroll) {
+            // Smooth scroll animation over 600ms with easeInOut
+            const start = el.scrollLeft;
+            const distance = center - start;
+            const duration = 800;
+            let startTime: number | null = null;
+            const animate = (time: number) => {
+              if (!startTime) startTime = time;
+              const progress = Math.min((time - startTime) / duration, 1);
+              const ease = progress < 0.5
+                ? 2 * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+              el.scrollLeft = start + distance * ease;
+              if (progress < 1) {
+                requestAnimationFrame(animate);
+              } else {
+                setVideoPlaying(false);
+                setPhase('transitioning');
+                setTransitionVideoUrl(video.url!);
+                onVideoEndRef.current = () => {
+                  setCurrentViewpoint(target);
+                  setPhase('idle');
+                  setVideoPlaying(false);
+                  setTransitionVideoUrl(null);
+                };
+              }
+            };
+            requestAnimationFrame(animate);
+            return;
+          }
+        }
         setVideoPlaying(false);
         setPhase('transitioning');
         setTransitionVideoUrl(video.url);
@@ -491,7 +528,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
               key={vp.id}
               src={vp.image?.url}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover portrait:object-top"
               style={{
                 opacity: vp.id === currentViewpoint ? 1 : 0,
                 zIndex: vp.id === currentViewpoint ? 5 : 1,
