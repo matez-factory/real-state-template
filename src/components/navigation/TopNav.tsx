@@ -138,8 +138,8 @@ export function TopNav({
         </nav>
       </div>
 
-      {/* ── Right: Fullscreen button + hover tooltip ── */}
-      <div className={`absolute top-[clamp(16px,2.5vh,32px)] right-[clamp(16px,2vw,30px)] z-40 items-center gap-[clamp(6px,0.7vw,10px)] text-white ${
+      {/* ── Right: Fullscreen button + hover tooltip (hidden on iOS — no Fullscreen API) ── */}
+      {document.fullscreenEnabled && <div className={`absolute top-[clamp(16px,2.5vh,32px)] right-[clamp(16px,2vw,30px)] z-40 items-center gap-[clamp(6px,0.7vw,10px)] text-white ${
         compact ? 'flex portrait:top-[46px] portrait:right-[33px]' : 'hidden landscape:flex'
       }`}>
         <div className="relative group">
@@ -172,7 +172,7 @@ export function TopNav({
             {isFullscreen ? 'Salir pantalla' : 'Pantalla completa'}
           </span>
         </div>
-      </div>
+      </div>}
 
       {/* ── Mobile portrait: bottom tab bar ── */}
       <div

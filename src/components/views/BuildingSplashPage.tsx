@@ -68,7 +68,7 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
   const location = [project.city, project.state].filter(Boolean).join(', ');
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       {/* Background image */}
       {backgroundUrl && (
         <img
@@ -100,7 +100,7 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
 
         {/* Location */}
         {location && (
-          <p className="mt-[clamp(4px,1.5vh,15px)] font-light text-[#D5D5D5] leading-[1.5] tracking-[0px] capitalize portrait:text-[24px] landscape:text-[clamp(12px,2vw,24px)]">
+          <p className="mt-[clamp(4px,1.5vh,15px)] font-light text-[#D5D5D5] leading-[1.5] tracking-[0px] capitalize portrait:text-[18px] landscape:text-[clamp(12px,2vw,24px)]">
             {location}
           </p>
         )}
@@ -180,7 +180,7 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
       )}
 
       {/* Portrait: rotate device overlay */}
-      <RotateDeviceOverlay backgroundUrl={backgroundUrl} logoUrl={logoUrl} />
+      <RotateDeviceOverlay backgroundUrl={backgroundUrl} />
     </div>
   );
 }

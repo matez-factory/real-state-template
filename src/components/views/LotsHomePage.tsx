@@ -83,7 +83,7 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
     'absolute top-1/2 -translate-y-1/2 z-30 w-8 h-8 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-full lots-glass flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-black/50 hover:scale-110 outline-none';
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       <div className="absolute inset-0">
         {activeView === 'tour' && (
           <Spin360Viewer

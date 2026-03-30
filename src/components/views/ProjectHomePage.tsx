@@ -104,7 +104,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
   const activeSection = activeView === 'location' ? 'location' as const : 'home' as const;
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
         {activeView === 'tour' && (
           <Spin360Viewer
