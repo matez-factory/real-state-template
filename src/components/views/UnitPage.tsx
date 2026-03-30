@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
+import { useIsMobilePortrait } from '@/hooks/useIsMobilePortrait';
 import { TopNav } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
@@ -27,6 +28,7 @@ interface UnitPageProps {
 export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const navigate = useNavigate();
   const { project, currentLayer, media } = data;
+  const isMobilePortrait = useIsMobilePortrait();
 
   const [mediaTab, setMediaTab] = useState<MediaTab>('gallery');
   const [activeView, setActiveView] = useState<ActiveView>('unit');
@@ -43,10 +45,13 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     [media]
   );
 
-  const galleryImages = useMemo(
-    () => media.filter((m) => m.type === 'image' && m.purpose === 'gallery'),
-    [media]
-  );
+  const galleryImages = useMemo(() => {
+    if (isMobilePortrait) {
+      const mobile = media.filter((m) => m.type === 'image' && m.purpose === 'gallery_mobile');
+      if (mobile.length > 0) return mobile;
+    }
+    return media.filter((m) => m.type === 'image' && m.purpose === 'gallery');
+  }, [media, isMobilePortrait]);
 
   const uploadedVideos = useMemo(
     () => media.filter((m) => m.type === 'video'),
@@ -54,10 +59,17 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   );
 
   const fichaImages = useMemo(() => {
+    if (isMobilePortrait) {
+      const furnishedMobile = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_furnished_mobile');
+      const measuredMobile = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_measured_mobile');
+      if (furnishedMobile.length > 0 || measuredMobile.length > 0) {
+        return [...furnishedMobile, ...measuredMobile];
+      }
+    }
     const furnished = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_furnished');
     const measured = media.filter((m) => m.type === 'image' && m.purpose === 'ficha_measured');
     return [...furnished, ...measured];
-  }, [media]);
+  }, [media, isMobilePortrait]);
   const unitThumbnail = useMemo(
     () => media.find((m) => m.purpose === 'thumbnail' && m.type === 'image')?.url,
     [media]
