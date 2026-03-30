@@ -125,7 +125,7 @@ export function SiblingNavigator({
     <aside
       className="hidden landscape:flex absolute left-[clamp(10px,3vw,47px)] top-[clamp(50px,14vh,116px)] z-40 flex-col rounded-[clamp(10px,3vh,20px)] w-[clamp(68px,10vw,114px)] overflow-hidden"
       style={{
-        height: 'calc(100vh - clamp(60px,15vh,116px) - clamp(20px,5vh,48px))',
+        height: 'calc(100dvh - clamp(60px,15vh,116px) - clamp(20px,5vh,48px))',
         maxHeight: '614px',
         background: 'rgba(214, 214, 214, 0.45)',
         backgroundBlendMode: 'luminosity',

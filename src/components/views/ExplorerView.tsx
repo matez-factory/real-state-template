@@ -33,6 +33,8 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const mapScrollRef = useRef<HTMLDivElement>(null);
   const [mapScale, setMapScale] = useState(1);
+  const floorScrollRef = useRef<HTMLDivElement>(null);
+  const [floorBarOffset, setFloorBarOffset] = useState(0);
   const pinchStartDist = useRef<number | null>(null);
   const pinchStartScale = useRef(1);
 
@@ -157,7 +159,7 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
   const activeSection = activeView === 'location' ? 'location' as const : 'map' as const;
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       <div className="absolute inset-0">
         {activeView === 'map' && (
           <main
@@ -262,7 +264,17 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
             <div className="relative z-10 flex flex-col items-center pt-[10px] pb-[4px]">
               <span className="text-[13px] text-[#585555] font-light mb-[6px]">Nivel</span>
               <div className="relative flex items-center max-w-[95vw] px-1">
-                <div className="flex items-center gap-[2px] overflow-x-auto [&::-webkit-scrollbar]:h-0 px-1">
+                <div
+                  ref={floorScrollRef}
+                  className="flex items-center gap-[2px] overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ msOverflowStyle: 'none' } as React.CSSProperties}
+                  onScroll={() => {
+                    const el = floorScrollRef.current;
+                    if (!el || el.scrollWidth <= el.clientWidth) return;
+                    const ratio = el.scrollLeft / (el.scrollWidth - el.clientWidth);
+                    setFloorBarOffset(ratio * 100);
+                  }}
+                >
                   {[...siblings].reverse().map((sibling) => {
                     const isCurrent = sibling.id === (activeLayerId ?? currentLayer?.id);
                     const shortLabel = sibling.label.replace(/^(piso|nivel|planta|n)\s*/i, '');
@@ -281,9 +293,10 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
                     );
                   })}
                 </div>
-                {/* Scroll hint arrow */}
-                <div
-                  className="flex-shrink-0 size-[28px] rounded-full flex items-center justify-center ml-1"
+                {/* Scroll arrow — scrolls the floor list */}
+                <button
+                  type="button"
+                  className="flex-shrink-0 size-[28px] rounded-full flex items-center justify-center ml-1 outline-none"
                   style={{
                     background: 'rgba(128, 128, 128, 0.23)',
                     backgroundBlendMode: 'luminosity',
@@ -291,23 +304,27 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
                     WebkitBackdropFilter: 'blur(50px)',
                     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                   }}
+                  onClick={() => {
+                    floorScrollRef.current?.scrollBy({ left: 120, behavior: 'smooth' });
+                  }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#585555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 6 15 12 9 18" />
                   </svg>
-                </div>
+                </button>
               </div>
-              {/* Position indicator bar */}
+              {/* Scroll position bar */}
               {(() => {
-                const currentIdx = [...siblings].reverse().findIndex((s) => s.id === (activeLayerId ?? currentLayer?.id));
-                const total = siblings.length;
-                const barWidth = total > 0 ? Math.max(30, 100 / total) : 40;
-                const barOffset = total > 1 ? (currentIdx / (total - 1)) * (100 - barWidth) : 0;
+                const el = floorScrollRef.current;
+                const hasOverflow = el ? el.scrollWidth > el.clientWidth : siblings.length > 8;
+                if (!hasOverflow) return null;
+                const thumbW = el ? Math.max(30, (el.clientWidth / el.scrollWidth) * 100) : 40;
+                const thumbLeft = floorBarOffset * ((100 - thumbW) / 100);
                 return (
                   <div className="w-[100px] h-[3px] rounded-full bg-[rgba(234,234,234,0.45)] mt-[8px] overflow-hidden relative">
                     <div
-                      className="absolute h-full rounded-full bg-[#A2A2A2] transition-all duration-300"
-                      style={{ width: `${barWidth}%`, left: `${barOffset}%` }}
+                      className="absolute h-full rounded-full bg-[#A2A2A2] transition-[left] duration-100"
+                      style={{ width: `${thumbW}%`, left: `${thumbLeft}%` }}
                     />
                   </div>
                 );
