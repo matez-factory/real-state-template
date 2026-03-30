@@ -119,7 +119,7 @@ export function LotsExplorerView({
   const activeSection = activeView === 'location' ? 'location' as const : 'map' as const;
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       <div className="absolute inset-0 portrait:scale-[1.3] landscape:scale-[1.15] xl:scale-100">
         {activeView === 'map' && backgroundUrl && (
           <img

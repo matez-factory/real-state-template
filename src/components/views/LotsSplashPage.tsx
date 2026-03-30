@@ -25,7 +25,7 @@ export function LotsSplashPage({ data }: LotsSplashPageProps) {
   const firstChildSlug = children[0]?.slug;
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-dvh overflow-hidden bg-black">
       {backgroundUrl && (
         <FadeImage
           src={backgroundUrl}

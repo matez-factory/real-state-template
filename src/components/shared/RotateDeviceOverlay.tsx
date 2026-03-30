@@ -5,10 +5,9 @@ const DISMISSED_KEY = 'rotate-overlay-dismissed';
 
 interface RotateDeviceOverlayProps {
   backgroundUrl?: string;
-  logoUrl?: string;
 }
 
-export function RotateDeviceOverlay({ backgroundUrl, logoUrl }: RotateDeviceOverlayProps) {
+export function RotateDeviceOverlay({ backgroundUrl }: RotateDeviceOverlayProps) {
   const isPortrait = useIsMobilePortrait();
   const [dismissed, setDismissed] = useState(() => {
     try { return sessionStorage.getItem(DISMISSED_KEY) === '1'; } catch { return false; }
@@ -43,62 +42,27 @@ export function RotateDeviceOverlay({ backgroundUrl, logoUrl }: RotateDeviceOver
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center px-8">
-        {/* Logo — Figma: ~193×58, centered */}
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt=""
-            className="w-[70px] h-auto object-contain mb-[16px]"
-          />
-        )}
-
         {/* Rotate phone icon */}
         <svg
           width="76"
-          height="66"
-          viewBox="0 0 76 66"
+          height="76"
+          viewBox="0 0 76 76"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="mb-[16px]"
         >
-          {/* Phone body (rotated rectangle) */}
-          <rect
-            x="16"
-            y="4"
-            width="28"
-            height="50"
-            rx="4"
-            stroke="white"
-            strokeWidth="2.5"
-            transform="rotate(-45 30 29)"
-          />
-          {/* Arrow curves suggesting rotation */}
-          <path
-            d="M8 42C4 36 4 28 8 22"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M4 24L8 22L10 26"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M68 24C72 30 72 38 68 44"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M72 42L68 44L66 40"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {/* Phone body — drawn centered then rotated as group */}
+          <g transform="rotate(-30 38 38)">
+            <rect x="23" y="10" width="30" height="52" rx="5" stroke="white" strokeWidth="2.5" fill="none" />
+            {/* Home button dot */}
+            <circle cx="38" cy="56" r="2" stroke="white" strokeWidth="1.5" fill="none" />
+          </g>
+          {/* Left curved arrow */}
+          <path d="M8 48C3 40 3 30 8 22" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <path d="M4 24L8 22L10 27" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          {/* Right curved arrow */}
+          <path d="M68 28C73 36 73 46 68 54" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <path d="M72 52L68 54L66 49" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
 
         {/* Title — Figma: Poppins 400 32px #FFFFFF */}

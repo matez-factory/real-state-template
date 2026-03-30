@@ -114,7 +114,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
 
 
   return (
-    <div className="relative h-screen overflow-hidden bg-[#2A2A2A]">
+    <div className="relative h-dvh overflow-hidden bg-[#2A2A2A]">
       {/* Background — full-bleed image changes per tab */}
       {mediaTab === 'gallery' && fichaImages.length > 0 && (
         <img src={fichaImages[planoIndex]?.url} alt="" className="absolute inset-0 w-full h-full object-cover portrait:object-contain transition-opacity duration-300" key={planoIndex} />
@@ -173,34 +173,34 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
             </div>
           )}
 
-          {/* Planos arrows + progress — when multiple fichas */}
-          {mediaTab === 'gallery' && fichaImages.length > 1 && !sheetExpanded && (
-            <GlassArrows
-              onPrev={() => setPlanoIndex((i) => (i - 1 + fichaImages.length) % fichaImages.length)}
-              onNext={() => setPlanoIndex((i) => (i + 1) % fichaImages.length)}
-              count={fichaImages.length}
-              activeIndex={planoIndex}
-              className="absolute left-1/2 -translate-x-1/2 z-30 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[180px]"
-              small
-            />
-          )}
-
-          {/* Gallery arrows + progress */}
-          {mediaTab === 'video' && galleryImages.length > 1 && !sheetExpanded && (
-            <GlassArrows
-              onPrev={galleryPrev}
-              onNext={galleryNext}
-              count={galleryImages.length}
-              activeIndex={galleryIndex}
-              className="absolute left-1/2 -translate-x-1/2 z-30 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[180px]"
-              small
-            />
-          )}
-
           {/* Mobile portrait: handled by MobileUnitSheet below */}
         </div>
       ) : (
         <LocationView project={project} />
+      )}
+
+      {/* Planos arrows + progress — fixed, outside swipe container */}
+      {activeView === 'unit' && mediaTab === 'gallery' && fichaImages.length > 1 && !sheetExpanded && (
+        <GlassArrows
+          onPrev={() => setPlanoIndex((i) => (i - 1 + fichaImages.length) % fichaImages.length)}
+          onNext={() => setPlanoIndex((i) => (i + 1) % fichaImages.length)}
+          count={fichaImages.length}
+          activeIndex={planoIndex}
+          className="fixed left-1/2 -translate-x-1/2 z-40 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[190px]"
+          small
+        />
+      )}
+
+      {/* Gallery arrows + progress — fixed, outside swipe container */}
+      {activeView === 'unit' && mediaTab === 'video' && galleryImages.length > 1 && !sheetExpanded && (
+        <GlassArrows
+          onPrev={galleryPrev}
+          onNext={galleryNext}
+          count={galleryImages.length}
+          activeIndex={galleryIndex}
+          className="fixed left-1/2 -translate-x-1/2 z-40 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[190px]"
+          small
+        />
       )}
 
       {/* TopNav */}
