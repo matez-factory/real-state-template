@@ -43,7 +43,7 @@ export function MobileUnitSheet({
   const {
     label, status, price, description, orientation, area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
-
+ 
   const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
 
   const priceFormatted = useMemo(() => {
