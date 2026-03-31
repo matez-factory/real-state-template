@@ -109,12 +109,12 @@ export function AdminDashboard() {
     }
   }, []);
 
-  const updatePrice = useCallback(async (unitId: string, newPrice: number) => {
+  const updatePrice = useCallback(async (unitId: string, newPrice: number | null) => {
     setSaving((p) => ({ ...p, [unitId]: true }));
     try {
       const res = await adminFetch(`/layers/${unitId}`, {
         method: 'PUT',
-        body: JSON.stringify({ price: newPrice }),
+        body: JSON.stringify({ price: newPrice ?? 0 }),
       });
       if (!res.ok) throw new Error('Error actualizando precio');
       setUnits((prev) => prev.map((u) => u.id === unitId ? { ...u, price: newPrice } : u));
@@ -246,7 +246,7 @@ function UnitTableRow({
   unit: UnitRow;
   saving: boolean;
   onStatusChange: (s: EntityStatus) => void;
-  onPriceChange: (p: number) => void;
+  onPriceChange: (p: number | null) => void;
 }) {
   const [editingPrice, setEditingPrice] = useState(false);
   const [priceValue, setPriceValue] = useState(String(unit.price ?? ''));
@@ -255,9 +255,13 @@ function UnitTableRow({
   const areaLabel = unit.areaUnit === 'ft2' ? 'ft²' : unit.areaUnit === 'ha' ? 'ha' : 'm²';
 
   const handlePriceSave = () => {
-    const num = parseFloat(priceValue);
-    if (!isNaN(num) && num >= 0) {
-      onPriceChange(num);
+    if (priceValue.trim() === '') {
+      onPriceChange(null);
+    } else {
+      const num = parseFloat(priceValue);
+      if (!isNaN(num) && num >= 0) {
+        onPriceChange(num);
+      }
     }
     setEditingPrice(false);
   };
