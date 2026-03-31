@@ -79,7 +79,11 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
   const dragRef = useRef<HTMLDivElement>(null);
 
   const isMobilePortrait = useIsMobilePortrait();
-  const portraitPanorama = isMobilePortrait && enablePanorama;
+  const hasMobileImages = useMemo(
+    () => media.some((m) => m.purpose === 'gallery_mobile' && m.type === 'image'),
+    [media]
+  );
+  const portraitPanorama = isMobilePortrait && enablePanorama && !hasMobileImages;
 
   useEffect(() => {
     if (viewpointOrder.length > 0 && !currentViewpoint) {
