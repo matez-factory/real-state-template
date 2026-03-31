@@ -152,7 +152,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
         {activeView === 'location' && <LocationView project={project} />}
       </div>
 
-      {activeView === 'tour' && (
+      {activeView === 'tour' && currentViewpoint === viewpointOrder[0] && (
         <MobileHint
           isTourActive
           isTransitioning={false}
@@ -161,22 +161,24 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
         />
       )}
 
+      <div className={isTransitioning ? 'pointer-events-none' : ''}>
+        <TopNav
+          activeSection={activeSection}
+          onNavigate={handleNavigate}
+          onContactOpen={() => setContactOpen(true)}
+          mapLabel="Plantas"
+          showBack
+          onBack={activeView === 'location'
+            ? () => setActiveView('tour')
+            : () => navigate(backUrl)
+          }
+          hideMobileNav={false}
+          compact
+        />
+      </div>
+
       {!isTransitioning && (
         <>
-          <TopNav
-            activeSection={activeSection}
-            onNavigate={handleNavigate}
-            onContactOpen={() => setContactOpen(true)}
-            mapLabel="Plantas"
-            showBack
-            onBack={activeView === 'location'
-              ? () => setActiveView('tour')
-              : () => navigate(backUrl)
-            }
-            hideMobileNav={false}
-            compact
-          />
-
           {/* Social icons — bottom right */}
           {activeView === 'tour' && <SocialButtons project={project} />}
         </>
