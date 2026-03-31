@@ -19,10 +19,14 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
     [media]
   );
 
-  const backgroundUrl = useMemo(
-    () => media.find((m) => m.purpose === 'background' && m.type === 'image')?.url,
-    [media]
-  );
+  const backgroundUrl = useMemo(() => {
+    const isMobilePortrait = window.innerWidth < 1280 && window.matchMedia('(orientation: portrait)').matches;
+    if (isMobilePortrait) {
+      const mobile = media.find((m) => m.purpose === 'background_mobile' && m.type === 'image');
+      if (mobile?.url) return mobile.url;
+    }
+    return media.find((m) => m.purpose === 'background' && m.type === 'image')?.url;
+  }, [media]);
 
   // If project has 360 tour and there's a tour layer, go there first (it has the hotspot/spin media)
   // Otherwise pick the first non-tour child with content
@@ -39,9 +43,18 @@ export function BuildingSplashPage({ data, onPlayIntro, preloadPhase = 'done', p
 
   const introVideoUrl = useMemo(() => {
     if (!project.hasVideoIntro) return null;
-    // First check project-level media
+
+    // On mobile portrait, prefer intro_mobile if available
+    const isMobilePortrait = window.innerWidth < 1280 && window.matchMedia('(orientation: portrait)').matches;
+    if (isMobilePortrait) {
+      const mobileIntro = media.find((m) => m.type === 'video' && m.purpose === 'intro_mobile');
+      if (mobileIntro?.url) return mobileIntro.url;
+    }
+
+    // Desktop or no mobile variant: use standard intro
     const projectIntro = media.find((m) => m.type === 'video' && m.purpose === 'intro');
     if (projectIntro?.url) return projectIntro.url;
+
     // Fallback: check tour child's media (legacy: purpose 'transition' with metadata from_viewpoint 'intro')
     const tourChild = children.find((c) => c.type === 'tour') ?? children[0];
     if (!tourChild) return null;

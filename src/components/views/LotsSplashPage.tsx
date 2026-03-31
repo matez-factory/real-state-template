@@ -17,10 +17,14 @@ export function LotsSplashPage({ data }: LotsSplashPageProps) {
     [media]
   );
 
-  const backgroundUrl = useMemo(
-    () => media.find((m) => m.purpose === 'background' && m.type === 'image')?.url,
-    [media]
-  );
+  const backgroundUrl = useMemo(() => {
+    const isMobilePortrait = window.innerWidth < 1280 && window.matchMedia('(orientation: portrait)').matches;
+    if (isMobilePortrait) {
+      const mobile = media.find((m) => m.purpose === 'background_mobile' && m.type === 'image');
+      if (mobile?.url) return mobile.url;
+    }
+    return media.find((m) => m.purpose === 'background' && m.type === 'image')?.url;
+  }, [media]);
 
   const firstChildSlug = children[0]?.slug;
 
