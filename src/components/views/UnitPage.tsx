@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
@@ -80,7 +80,36 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const hasPlanos = fichaImages.length > 0;
   const hasGallery = galleryImages.length > 0 || project.hasGallery;
   const hasVideo = !!(currentLayer?.videoUrl) || uploadedVideos.length > 0;
-  const hasTour = !!(currentLayer?.tourEmbedUrl) || project.hasRecorrido360Embed;
+  /** Embed Matterport/etc. viene del layer en LayerForm (`tour_embed_url`), no del flag global del proyecto:
+   * `has_recorrido_360_embed` no se pasa al iframe y dejaba la pestaña Tour vacía. */
+  const tourEmbedUrl = useMemo(() => {
+    const u = currentLayer?.tourEmbedUrl?.trim();
+    return u || undefined;
+  }, [currentLayer?.tourEmbedUrl]);
+  const hasTour = Boolean(tourEmbedUrl);
+
+  /* Sin assets *_mobile en portrait: contain = foto web entera; con mobile: cover. */
+  const hasGalleryMobileAssets = useMemo(
+    () => media.some((m) => m.type === 'image' && m.purpose === 'gallery_mobile'),
+    [media]
+  );
+  const hasFichaMobileAssets = useMemo(
+    () =>
+      media.some(
+        (m) =>
+          m.type === 'image' &&
+          (m.purpose === 'ficha_furnished_mobile' || m.purpose === 'ficha_measured_mobile')
+      ),
+    [media]
+  );
+  const galleryFullBleedClass =
+    isMobilePortrait && !hasGalleryMobileAssets
+      ? 'object-cover portrait:object-contain'
+      : 'object-cover portrait:object-cover';
+  const fichaFullBleedClass =
+    isMobilePortrait && !hasFichaMobileAssets
+      ? 'object-cover portrait:object-contain'
+      : 'object-cover portrait:object-cover';
 
   const navItems = useMemo(() => {
     const items: { section: NavSection; label: string }[] = [];
@@ -89,6 +118,25 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     if (hasTour) items.push({ section: 'tour', label: 'Tour' });
     return items;
   }, [hasPlanos, hasGallery, hasVideo, hasTour]);
+
+  const clampedGalleryIndex = useMemo(() => {
+    const n = galleryImages.length;
+    if (n === 0) return 0;
+    return Math.min(galleryIndex, n - 1);
+  }, [galleryIndex, galleryImages.length]);
+
+  const clampedPlanoIndex = useMemo(() => {
+    const n = fichaImages.length;
+    if (n === 0) return 0;
+    return Math.min(planoIndex, n - 1);
+  }, [planoIndex, fichaImages.length]);
+
+  useEffect(() => {
+    if (mediaTab !== 'tour' || hasTour) return;
+    if (hasPlanos) setMediaTab('gallery');
+    else if (hasGallery || hasVideo) setMediaTab('video');
+    else setMediaTab('gallery');
+  }, [mediaTab, hasTour, hasPlanos, hasGallery, hasVideo]);
 
   const handleNavigate = useCallback((section: NavSection) => {
     const tab = SECTION_TO_TAB[section];
@@ -101,11 +149,21 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   }, []);
 
   const galleryPrev = useCallback(() => {
-    setGalleryIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+    setGalleryIndex((i) => {
+      const n = galleryImages.length;
+      if (n === 0) return 0;
+      const cur = Math.min(i, n - 1);
+      return (cur - 1 + n) % n;
+    });
   }, [galleryImages.length]);
 
   const galleryNext = useCallback(() => {
-    setGalleryIndex((i) => (i + 1) % galleryImages.length);
+    setGalleryIndex((i) => {
+      const n = galleryImages.length;
+      if (n === 0) return 0;
+      const cur = Math.min(i, n - 1);
+      return (cur + 1) % n;
+    });
   }, [galleryImages.length]);
 
   const activeSection = activeView === 'location' ? 'location' as const : TAB_TO_SECTION[mediaTab];
@@ -117,14 +175,19 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     <div className="relative h-dvh overflow-hidden bg-[#2A2A2A]">
       {/* Background — full-bleed image changes per tab */}
       {mediaTab === 'gallery' && fichaImages.length > 0 && (
-        <img src={fichaImages[planoIndex]?.url} alt="" className="absolute inset-0 w-full h-full object-cover portrait:object-contain transition-opacity duration-300" key={planoIndex} />
+        <img
+          src={fichaImages[clampedPlanoIndex]?.url}
+          alt=""
+          className={`absolute inset-0 w-full h-full ${fichaFullBleedClass} transition-opacity duration-300`}
+          key={fichaImages[clampedPlanoIndex]?.id ?? clampedPlanoIndex}
+        />
       )}
       {mediaTab === 'video' && galleryImages.length > 0 && (
         <img
-          src={galleryImages[galleryIndex]?.url}
+          src={galleryImages[clampedGalleryIndex]?.url}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover portrait:object-contain transition-opacity duration-300"
-          key={galleryIndex}
+          className={`absolute inset-0 w-full h-full ${galleryFullBleedClass} transition-opacity duration-300`}
+          key={galleryImages[clampedGalleryIndex]?.id ?? clampedGalleryIndex}
         />
       )}
 
@@ -141,8 +204,18 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
             const dx = endX - startX;
             if (Math.abs(dx) < 50) return;
             if (mediaTab === 'gallery' && fichaImages.length > 1) {
-              if (dx < 0) setPlanoIndex((i) => (i + 1) % fichaImages.length);
-              else setPlanoIndex((i) => (i - 1 + fichaImages.length) % fichaImages.length);
+              const n = fichaImages.length;
+              if (dx < 0) {
+                setPlanoIndex((i) => {
+                  const cur = Math.min(i, n - 1);
+                  return (cur + 1) % n;
+                });
+              } else {
+                setPlanoIndex((i) => {
+                  const cur = Math.min(i, n - 1);
+                  return (cur - 1 + n) % n;
+                });
+              }
             } else if (mediaTab === 'video' && galleryImages.length > 1) {
               if (dx < 0) galleryNext();
               else galleryPrev();
@@ -156,7 +229,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
                 activeTab="tour"
                 galleryImages={[]}
                 uploadedVideos={[]}
-                tourEmbedUrl={currentLayer.tourEmbedUrl}
+                tourEmbedUrl={tourEmbedUrl}
               />
             </div>
           )}
@@ -182,10 +255,20 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       {/* Planos arrows + progress — fixed, outside swipe container */}
       {activeView === 'unit' && mediaTab === 'gallery' && fichaImages.length > 1 && !sheetExpanded && (
         <GlassArrows
-          onPrev={() => setPlanoIndex((i) => (i - 1 + fichaImages.length) % fichaImages.length)}
-          onNext={() => setPlanoIndex((i) => (i + 1) % fichaImages.length)}
+          onPrev={() => setPlanoIndex((i) => {
+            const n = fichaImages.length;
+            if (n === 0) return 0;
+            const cur = Math.min(i, n - 1);
+            return (cur - 1 + n) % n;
+          })}
+          onNext={() => setPlanoIndex((i) => {
+            const n = fichaImages.length;
+            if (n === 0) return 0;
+            const cur = Math.min(i, n - 1);
+            return (cur + 1) % n;
+          })}
           count={fichaImages.length}
-          activeIndex={planoIndex}
+          activeIndex={clampedPlanoIndex}
           className="fixed left-1/2 -translate-x-1/2 z-40 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[190px]"
           small
         />
@@ -197,7 +280,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
           onPrev={galleryPrev}
           onNext={galleryNext}
           count={galleryImages.length}
-          activeIndex={galleryIndex}
+          activeIndex={clampedGalleryIndex}
           className="fixed left-1/2 -translate-x-1/2 z-40 landscape:bottom-[clamp(16px,3vh,28px)] portrait:bottom-[190px]"
           small
         />

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car } from 'lucide-react';
+import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
 import { getFeatureIcon } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
@@ -43,7 +43,7 @@ interface UnitInfoCardProps {
 
 export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: UnitInfoCardProps) {
   const {
-    label, status, unitTypeName, price,
+    label, status, unitTypeName, price, description, orientation,
     area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
 
@@ -69,6 +69,9 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
     }
     if (hasBalcony) {
       rows.push({ icon: Fence, text: 'Balcón' });
+    }
+    if (orientation) {
+      rows.push({ icon: Compass, text: `Orientación ${orientation}` });
     }
 
     if (features) {
@@ -133,6 +136,16 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
               </span>
             )}
           </div>
+
+          {/* Description */}
+          {description && (
+            <p
+              className="text-[14px] leading-[20px] mt-[8px]"
+              style={{ color: '#757474', fontFamily: poppins }}
+            >
+              {description}
+            </p>
+          )}
 
           {/* Instalaciones — Figma: Poppins 500 16px #484848, top:283 */}
           {featureRows.length > 0 && (

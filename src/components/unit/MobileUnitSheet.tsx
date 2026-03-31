@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car } from 'lucide-react';
+import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
 import { getFeatureIcon } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
@@ -41,7 +41,7 @@ export function MobileUnitSheet({
 }: MobileUnitSheetProps) {
 
   const {
-    label, status, price, area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
+    label, status, price, description, orientation, area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
 
   const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
@@ -68,6 +68,7 @@ export function MobileUnitSheet({
     if (bedrooms != null) rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
     if (bathrooms != null) rows.push({ icon: Bath, text: `${bathrooms} Baño${bathrooms !== 1 ? 's' : ''}` });
     if (hasBalcony) rows.push({ icon: Fence, text: 'Balcón' });
+    if (orientation) rows.push({ icon: Compass, text: `Orientación ${orientation}` });
     if (features) {
       for (const f of features) {
         const iconName = f.icon?.toLowerCase() ?? '';
@@ -202,6 +203,13 @@ export function MobileUnitSheet({
                   </span>
                 )}
               </div>
+
+              {/* Description */}
+              {description && (
+                <p className="text-[13px] leading-[18px] mt-[8px]" style={{ color: '#757474', fontFamily: poppins }}>
+                  {description}
+                </p>
+              )}
 
               {/* Features */}
               {featureRows.length > 0 && (
