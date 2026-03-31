@@ -27,6 +27,7 @@ export type MediaPurpose =
   | 'logo'
   | 'logo_developer'
   | 'hotspot'
+  | 'hotspot_mobile'
   | 'layers_gallery'
   | 'exterior_360'
   | 'favicon'

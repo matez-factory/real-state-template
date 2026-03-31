@@ -12,6 +12,7 @@ interface NavigationRenderProps {
 interface Spin360ViewerProps {
   media: Media[];
   spinSvgs: Record<string, string>;
+  spinSvgsMobile?: Record<string, string>;
   onEnterBuilding?: () => void;
   preloadOnEntrance?: string[];
   enterLabel?: string;
@@ -32,6 +33,7 @@ export interface Spin360ViewerRef {
 export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(function Spin360Viewer({
   media,
   spinSvgs,
+  spinSvgsMobile,
   onEnterBuilding,
   preloadOnEntrance,
   enterLabel = 'Explorar niveles',
@@ -106,9 +108,10 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
         const meta = m.metadata as Record<string, unknown>;
         return meta?.viewpoint === id && m.purpose !== 'gallery_mobile';
       });
-      return { id, image: mobileImage ?? desktopImage, svgPath: spinSvgs[id] };
+      const svgPath = (isMobilePortrait && spinSvgsMobile?.[id]) || spinSvgs[id];
+      return { id, image: mobileImage ?? desktopImage, svgPath };
     });
-  }, [viewpointOrder, media, spinSvgs, isMobilePortrait]);
+  }, [viewpointOrder, media, spinSvgs, spinSvgsMobile, isMobilePortrait]);
 
   useEffect(() => {
     const prefetchPurpose = isMobilePortrait ? 'transition_mobile' : 'transition';
@@ -182,7 +185,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
     if (!container) return;
 
     let cancelled = false;
-    const svgPath = spinSvgs[currentViewpoint];
+    const svgPath = (isMobilePortrait && spinSvgsMobile?.[currentViewpoint]) || spinSvgs[currentViewpoint];
     if (!svgPath) return;
 
     const isMobile = window.innerWidth <= 1280;
@@ -363,7 +366,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
       cancelled = true;
       container.innerHTML = '';
     };
-  }, [currentViewpoint, phase, handleEnterBuilding, spinSvgs, portraitPanorama, hotspotTowerId, hotspotMarkerId]);
+  }, [currentViewpoint, phase, handleEnterBuilding, spinSvgs, spinSvgsMobile, isMobilePortrait, portraitPanorama, hotspotTowerId, hotspotMarkerId]);
 
   useEffect(() => {
     if (!portraitPanorama || !scrollRef.current) return;
