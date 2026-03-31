@@ -495,7 +495,7 @@ export function InteractiveSVG({
       listenersRef.current = [];
       container.innerHTML = '';
     };
-  }, [setupSVG, svgMobileUrl, backgroundMobileUrl]);
+  }, [setupSVG, svgUrl, backgroundUrl, svgMobileUrl, backgroundMobileUrl]);
 
   return (
     <div

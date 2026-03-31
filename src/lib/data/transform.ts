@@ -292,8 +292,8 @@ export function buildExplorerPageData(
       if (ut) {
         if (!layer.unitTypeName) layer.unitTypeName = ut.name;
         // Fallback: unit_type fills in missing layer fields
-        if (layer.bedrooms == null && ut.bedrooms != null) layer.bedrooms = ut.bedrooms;
-        if (layer.bathrooms == null && ut.bathrooms != null) layer.bathrooms = ut.bathrooms;
+        if ((layer.bedrooms == null || layer.bedrooms === 0) && ut.bedrooms != null) layer.bedrooms = ut.bedrooms;
+        if ((layer.bathrooms == null || layer.bathrooms === 0) && ut.bathrooms != null) layer.bathrooms = ut.bathrooms;
         if (layer.description == null && ut.description) layer.description = ut.description;
         if (layer.hasBalcony == null && ut.has_balcony != null) layer.hasBalcony = ut.has_balcony;
         if (layer.orientation == null && ut.orientation) layer.orientation = ut.orientation;

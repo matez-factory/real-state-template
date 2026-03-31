@@ -180,12 +180,12 @@ export function TopNav({
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <nav
-          className="relative h-[91px] rounded-[20px] flex items-center justify-around px-[24px] overflow-hidden"
+          className="relative h-[91px] rounded-t-[20px] flex items-center justify-around px-[24px] overflow-hidden"
           style={{ filter: 'drop-shadow(0px 12px 20px #D0D6E2)' }}
         >
-          <div className="absolute inset-0 rounded-[20px] bg-white" />
+          <div className="absolute inset-0 rounded-t-[20px] bg-white" />
           <div
-            className="absolute inset-0 rounded-[20px]"
+            className="absolute inset-0 rounded-t-[20px]"
             style={{
               background: 'linear-gradient(270deg, rgba(214, 214, 214, 0.45) 0%, rgba(112, 112, 112, 0.45) 90.38%)',
               backgroundBlendMode: 'luminosity',

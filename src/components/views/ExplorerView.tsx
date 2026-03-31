@@ -45,6 +45,8 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
       if (svg) fetch(svg);
       const bg = d.media.find((m) => m.purpose === 'background' && m.type === 'image');
       if (bg?.url) { const img = new Image(); img.src = bg.url; }
+      const bgMob = d.media.find((m) => m.purpose === 'background_mobile' && m.type === 'image');
+      if (bgMob?.url) { const img = new Image(); img.src = bgMob.url; }
     }
   }, [siblingBundle]);
 
@@ -107,6 +109,14 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
   const logos = useMemo(
     () => media.filter((m) => m.purpose === 'logo' || m.purpose === 'logo_developer'),
     [media]
+  );
+
+  /** Logo del proyecto (branding); no usar logos[0] — el orden del API puede poner logo_developer primero. */
+  const projectLogoUrl = useMemo(
+    () =>
+      logos.find((m) => m.purpose === 'logo')?.url ??
+      logos.find((m) => m.purpose === 'logo_developer')?.url,
+    [logos]
   );
 
   const { childrenMedia } = activeData;
@@ -196,8 +206,9 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
                     svgUrl={svgUrl}
                     svgMobileUrl={svgMobileUrl}
                     entities={entityConfigs}
-                    backgroundUrl={backgroundUrl}
-                    backgroundMobileUrl={backgroundMobileUrl}
+                    /* Fondo solo en <img> padre: evita raster duplicado en el SVG y saltos al cambiar nivel. */
+                    backgroundUrl={undefined}
+                    backgroundMobileUrl={undefined}
                     variant="building"
                   />
                 ) : (
@@ -231,7 +242,7 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
           label="Nivel"
           onSelect={handleSiblingSelect}
           projectName={project.name}
-          logoUrl={logos[0]?.url ?? undefined}
+          logoUrl={projectLogoUrl}
         />
       )}
 
@@ -244,13 +255,13 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <div
-            className="relative rounded-[20px] overflow-hidden"
+            className="relative rounded-t-[20px] overflow-hidden"
             style={{ filter: 'drop-shadow(0px 12px 20px #D0D6E2)' }}
           >
             {/* Glass background */}
-            <div className="absolute inset-0 rounded-[20px] bg-white" />
+            <div className="absolute inset-0 rounded-t-[20px] bg-white" />
             <div
-              className="absolute inset-0 rounded-[20px]"
+              className="absolute inset-0 rounded-t-[20px]"
               style={{
                 background: 'linear-gradient(270deg, rgba(214, 214, 214, 0.45) 0%, rgba(112, 112, 112, 0.45) 90.38%)',
                 backgroundBlendMode: 'luminosity',
