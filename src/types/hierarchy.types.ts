@@ -23,6 +23,7 @@ export type MediaPurpose =
   | 'transition'
   | 'transition_mobile'
   | 'intro'
+  | 'intro_mobile'
   | 'brochure'
   | 'logo'
   | 'logo_developer'
