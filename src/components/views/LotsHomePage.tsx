@@ -46,6 +46,18 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
     return result;
   }, [media]);
 
+  const spinSvgsMobile = useMemo(() => {
+    const svgMedia = media.filter((m) => m.type === 'svg' && m.purpose === 'hotspot_mobile');
+    const result: Record<string, string> = {};
+    for (const m of svgMedia) {
+      const viewpoint = (m.metadata as Record<string, unknown>)?.viewpoint as string | undefined;
+      if (viewpoint && m.url) {
+        result[viewpoint] = m.url;
+      }
+    }
+    return result;
+  }, [media]);
+
   const mapTarget = useMemo(() => {
     if (children.length > 0) {
       return `/${data.currentPath.join('/')}/${children[0].slug}`;
@@ -89,6 +101,7 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
           <Spin360Viewer
             media={media}
             spinSvgs={spinSvgs}
+            spinSvgsMobile={spinSvgsMobile}
             hideControls
             enablePanorama
             hideSvgOverlay={false}
