@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData, SiblingExplorerBundle } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
 import { InteractiveSVG } from '@/components/svg/InteractiveSVG';
-import { BrandingBadge } from '@/components/navigation/BrandingBadge';
 import { TopNav } from '@/components/navigation/TopNav';
+import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
 import { LocationView } from '@/components/navigation/LocationView';
 import { LotFichaOverlay } from '@/components/lots/LotFichaOverlay';
@@ -27,6 +27,10 @@ export function LotsExplorerView({
 
   const [activeView, setActiveView] = useState<ActiveView>('map');
   const [contactOpen, setContactOpen] = useState(false);
+  const mapScrollRef = useRef<HTMLDivElement>(null);
+  const [mapScale, setMapScale] = useState(1);
+  const pinchStartDist = useRef<number | null>(null);
+  const pinchStartScale = useRef(1);
 
   const preSelectedLot = useMemo(
     () =>
@@ -59,6 +63,49 @@ export function LotsExplorerView({
   const backgroundMobileUrl =
     media.find((m) => m.purpose === 'background_mobile' && m.type === 'image')?.url ??
     data.currentLayer?.backgroundImageMobileUrl;
+
+  // Center scroll on mount
+  useEffect(() => {
+    const el = mapScrollRef.current;
+    if (!el) return;
+    const timer = setTimeout(() => {
+      if (el.scrollWidth > el.clientWidth) {
+        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Zoom with ctrl+wheel
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    setMapScale((s) => Math.min(1.5, Math.max(1, s - e.deltaY * 0.002)));
+  }, []);
+
+  // Pinch to zoom
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStartDist.current = Math.hypot(dx, dy);
+      pinchStartScale.current = mapScale;
+    }
+  }, [mapScale]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchStartDist.current != null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / pinchStartDist.current;
+      setMapScale(Math.min(1.5, Math.max(1, pinchStartScale.current * ratio)));
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    pinchStartDist.current = null;
+  }, []);
 
   const entityConfigs = useMemo(
     () =>
@@ -120,40 +167,68 @@ export function LotsExplorerView({
 
   return (
     <div className="relative h-dvh overflow-hidden bg-black">
-      <div className="absolute inset-0 portrait:scale-[1.3] landscape:scale-[1.15] xl:scale-100">
-        {activeView === 'map' && backgroundUrl && (
-          <img
-            src={backgroundUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-        {activeView === 'map' && svgUrl && (
-          <InteractiveSVG
-            svgUrl={svgUrl}
-            svgMobileUrl={svgMobileUrl}
-            entities={entityConfigs}
-            backgroundUrl={backgroundUrl}
-            backgroundMobileUrl={backgroundMobileUrl}
-          />
-        )}
-        {activeView === 'map' && !svgUrl && (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No hay mapa disponible
-          </div>
+      <div className="absolute inset-0">
+        {activeView === 'map' && (
+          <main
+            className="relative w-full h-full"
+            onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div
+              ref={mapScrollRef}
+              className={`absolute inset-0 landscape:overflow-hidden xl:overflow-hidden ${backgroundMobileUrl ? 'portrait:overflow-hidden' : 'portrait:overflow-x-auto portrait:overflow-y-hidden'}`}
+            >
+              <div
+                className={`relative h-full w-full xl:w-full origin-center transition-transform duration-150 ${backgroundMobileUrl ? '' : 'portrait:w-[170vw]'}`}
+                style={mapScale !== 1 ? { transform: `scale(${mapScale})` } : undefined}
+              >
+                {backgroundUrl && (
+                  <img
+                    src={backgroundUrl}
+                    alt=""
+                    className={`absolute inset-0 w-full h-full object-cover ${backgroundMobileUrl ? 'portrait:max-xl:hidden' : ''}`}
+                  />
+                )}
+                {backgroundMobileUrl && (
+                  <img
+                    src={backgroundMobileUrl}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover hidden portrait:max-xl:block"
+                  />
+                )}
+                {svgUrl ? (
+                  <InteractiveSVG
+                    svgUrl={svgUrl}
+                    svgMobileUrl={svgMobileUrl}
+                    entities={entityConfigs}
+                    backgroundUrl={undefined}
+                    backgroundMobileUrl={undefined}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    No hay mapa disponible
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
         )}
         {activeView === 'location' && <LocationView project={project} />}
       </div>
-
-      <BrandingBadge project={project} logos={logos} />
 
       <TopNav
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onContactOpen={() => setContactOpen(true)}
+        mapLabel="Lotes"
         showBack
         onBack={activeView === 'location' ? () => setActiveView('map') : () => navigate(backUrl)}
+        compact
       />
+
+      {activeView === 'map' && <SocialButtons project={project} />}
 
       {selectedLot && (
         <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${fichaClosing ? 'opacity-0' : 'opacity-100'}`}>

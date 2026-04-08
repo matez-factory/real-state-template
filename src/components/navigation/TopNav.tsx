@@ -307,5 +307,14 @@ export function MobileTabIcon({ section, active }: { section: string; active: bo
     );
   }
 
+  // Contacto — phone
+  if (section === 'contact') {
+    return (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92V19.92C22 20.48 21.56 20.93 21 20.97C20.77 20.99 20.53 21 20.3 21C10.8 21 3 13.2 3 3.7C3 3.47 3.01 3.23 3.03 3C3.07 2.44 3.52 2 4.08 2H7.08C7.56 2 7.97 2.34 8.05 2.81C8.14 3.41 8.3 3.99 8.54 4.55L7.03 6.06C8.36 8.57 10.43 10.64 12.94 11.97L14.45 10.46C15.01 10.7 15.59 10.86 16.19 10.95C16.66 11.03 17 11.44 17 11.92V14.92" />
+      </svg>
+    );
+  }
+
   return null;
 }
