@@ -1,50 +1,20 @@
-import { useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
-import { LandingOverlay } from '@/components/lots/LandingOverlay';
-import { FadeImage } from '@/components/shared/FadeImage';
+import { BuildingSplashPage } from './BuildingSplashPage';
 
 interface LotsSplashPageProps {
   data: ExplorerPageData;
+  onPlayIntro?: (videoUrl: string, targetPath: string) => void;
+  preloadPhase?: 'loading' | 'fadeout' | 'done';
+  preloadProgress?: number;
 }
 
-export function LotsSplashPage({ data }: LotsSplashPageProps) {
-  const navigate = useNavigate();
-  const { project, media, children } = data;
-
-  const logos = useMemo(
-    () => media.filter((m) => m.purpose === 'logo' || m.purpose === 'logo_developer'),
-    [media]
-  );
-
-  const backgroundUrl = useMemo(() => {
-    const isMobilePortrait = window.innerWidth < 1280 && window.matchMedia('(orientation: portrait)').matches;
-    if (isMobilePortrait) {
-      const mobile = media.find((m) => m.purpose === 'background_mobile' && m.type === 'image');
-      if (mobile?.url) return mobile.url;
-    }
-    return media.find((m) => m.purpose === 'background' && m.type === 'image')?.url;
-  }, [media]);
-
-  const firstChildSlug = children[0]?.slug;
-
+export function LotsSplashPage({ data, onPlayIntro, preloadPhase, preloadProgress }: LotsSplashPageProps) {
   return (
-    <div className="relative h-dvh overflow-hidden bg-black">
-      {backgroundUrl && (
-        <FadeImage
-          src={backgroundUrl}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
-
-      <LandingOverlay
-        project={project}
-        logos={logos}
-        onEnter={() => {
-          if (firstChildSlug) navigate(`/${firstChildSlug}`);
-        }}
-      />
-    </div>
+    <BuildingSplashPage
+      data={data}
+      onPlayIntro={onPlayIntro}
+      preloadPhase={preloadPhase}
+      preloadProgress={preloadProgress}
+    />
   );
 }
