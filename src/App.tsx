@@ -23,10 +23,16 @@ const CONCURRENCY = 6;
 const ASSET_TIMEOUT = 8_000;
 
 function loadAsset(url: string): Promise<void> {
-  return Promise.race([
-    fetch(url).then(() => {}).catch(() => {}),
-    new Promise<void>((r) => setTimeout(r, ASSET_TIMEOUT)),
-  ]);
+  const isImage = /\.(webp|png|jpe?g|gif|avif)(\?|$)/i.test(url);
+  const load = isImage
+    ? new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = url;
+      })
+    : fetch(url).then(() => {}).catch(() => {});
+  return Promise.race([load, new Promise<void>((r) => setTimeout(r, ASSET_TIMEOUT))]);
 }
 
 // ─── Splash route (/) ───────────────────────────────────────
@@ -45,7 +51,7 @@ function SplashRoute({ raw, onPlayIntro, preloadPhase, preloadProgress }: Splash
   );
 
   if (data.project.type === 'lots') {
-    return <LotsSplashPage data={data} />;
+    return <LotsSplashPage data={data} onPlayIntro={onPlayIntro} preloadPhase={preloadPhase} preloadProgress={preloadProgress} />;
   }
   return <BuildingSplashPage data={data} onPlayIntro={onPlayIntro} preloadPhase={preloadPhase} preloadProgress={preloadProgress} />;
 }

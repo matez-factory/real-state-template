@@ -1,14 +1,13 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
-import { getHomeUrl, getBackUrl } from '@/lib/navigation';
-import { Spin360Viewer } from '@/components/video/Spin360Viewer';
+import { Spin360Viewer, type Spin360ViewerRef } from '@/components/video/Spin360Viewer';
 import { MobileHint } from '@/components/shared/MobileHint';
-import { BrandingBadge } from '@/components/navigation/BrandingBadge';
 import { TopNav } from '@/components/navigation/TopNav';
 import { ContactModal } from '@/components/navigation/ContactModal';
 import { LocationView } from '@/components/navigation/LocationView';
+import { SocialButtons } from '@/components/navigation/SocialButtons';
+import { GlassArrows } from '@/components/shared/GlassArrows';
 
 interface LotsHomePageProps {
   data: ExplorerPageData;
@@ -18,12 +17,15 @@ type ActiveView = 'tour' | 'location';
 
 export function LotsHomePage({ data }: LotsHomePageProps) {
   const navigate = useNavigate();
-  const { project, media, children } = data;
+  const { project, media, children, siblings } = data;
 
+  const spinRef = useRef<Spin360ViewerRef>(null);
   const [activeView, setActiveView] = useState<ActiveView>('tour');
   const [contactOpen, setContactOpen] = useState(false);
   const [currentViewpoint, setCurrentViewpoint] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [viewpointCount, setViewpointCount] = useState(0);
+  const [viewpointIndex, setViewpointIndex] = useState(0);
 
   const handleTransitionChange = useCallback((transitioning: boolean) => {
     setIsTransitioning(transitioning);
@@ -58,32 +60,44 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
     return result;
   }, [media]);
 
+  const viewpointOrder = useMemo(() => {
+    return media
+      .filter((m) => m.type === 'svg' && m.purpose === 'hotspot')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((m) => (m.metadata as Record<string, unknown>)?.viewpoint as string)
+      .filter(Boolean);
+  }, [media]);
+
+  const handleViewpointChange = useCallback((id: string) => {
+    setCurrentViewpoint(id);
+    const idx = viewpointOrder.indexOf(id);
+    if (idx >= 0) setViewpointIndex(idx);
+    setViewpointCount(viewpointOrder.length);
+  }, [viewpointOrder]);
+
   const mapTarget = useMemo(() => {
     if (children.length > 0) {
       return `/${data.currentPath.join('/')}/${children[0].slug}`;
     }
     const currentId = data.currentLayer?.id;
-    const nextSibling = data.siblings.find((s) => s.id !== currentId);
+    const nextSibling = siblings.find((s) => s.id !== currentId);
     if (nextSibling) {
       return `/${nextSibling.slug}`;
     }
     return null;
-  }, [data.currentPath, children, data.currentLayer, data.siblings]);
+  }, [data.currentPath, children, data.currentLayer, siblings]);
 
-  const homeUrl = getHomeUrl(data);
-  const backUrl = getBackUrl(data);
-
-  const isHomeLayer = data.currentLayer?.id === data.rootLayers[0]?.id;
+  const backUrl = '/';
 
   const handleNavigate = (section: string) => {
     if (section === 'home') {
-      if (isHomeLayer) {
-        setActiveView('tour');
-      } else {
-        navigate(homeUrl);
-      }
+      setActiveView('tour');
     } else if (section === 'map') {
-      if (mapTarget) navigate(mapTarget);
+      if (mapTarget) {
+        navigate(mapTarget);
+      } else {
+        spinRef.current?.enterBuilding();
+      }
     } else if (section === 'location') {
       setActiveView('location');
     }
@@ -91,14 +105,12 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
 
   const activeSection = activeView === 'location' ? 'location' as const : 'home' as const;
 
-  const arrowClass =
-    'absolute top-1/2 -translate-y-1/2 z-30 w-8 h-8 md:w-10 md:h-10 xl:w-12 xl:h-12 rounded-full lots-glass flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-black/50 hover:scale-110 outline-none';
-
   return (
     <div className="relative h-dvh overflow-hidden bg-black">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         {activeView === 'tour' && (
           <Spin360Viewer
+            ref={spinRef}
             media={media}
             spinSvgs={spinSvgs}
             spinSvgsMobile={spinSvgsMobile}
@@ -107,7 +119,7 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
             hideSvgOverlay={false}
             hotspotTowerId={project.hotspotTowerId}
             hotspotMarkerId={project.hotspotMarkerId}
-            onViewpointChange={setCurrentViewpoint}
+            onViewpointChange={handleViewpointChange}
             onTransitionChange={handleTransitionChange}
             onEnterBuilding={() => {
               if (mapTarget) navigate(mapTarget);
@@ -115,22 +127,14 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
             renderNavigation={({ onPrev, onNext, isTransitioning: trans }) => {
               if (trans) return null;
               return (
-                <>
-                  <button
-                    onClick={onPrev}
-                    className={`${arrowClass} left-2 md:left-4 xl:left-16`}
-                    aria-label="Anterior"
-                  >
-                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6 text-white/90" />
-                  </button>
-                  <button
-                    onClick={onNext}
-                    className={`${arrowClass} right-2 md:right-4 xl:right-16`}
-                    aria-label="Siguiente"
-                  >
-                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6 text-white/90" />
-                  </button>
-                </>
+                <GlassArrows
+                  onPrev={onPrev}
+                  onNext={onNext}
+                  count={viewpointCount}
+                  activeIndex={viewpointIndex}
+                  className="absolute bottom-[clamp(16px,3vh,28px)] left-1/2 -translate-x-1/2 z-30 portrait:bottom-[110px]"
+                  small
+                />
               );
             }}
           />
@@ -138,27 +142,34 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
         {activeView === 'location' && <LocationView project={project} />}
       </div>
 
-      {activeView === 'tour' && (
+      {activeView === 'tour' && currentViewpoint === viewpointOrder[0] && (
         <MobileHint
           isTourActive
           isTransitioning={false}
           currentSceneId={currentViewpoint}
+          pillMessage="Deslizá para ver la imagen completa"
         />
       )}
 
+      <div className={isTransitioning ? 'pointer-events-none' : ''}>
+        <TopNav
+          activeSection={activeSection}
+          onNavigate={handleNavigate}
+          onContactOpen={() => setContactOpen(true)}
+          mapLabel="Lotes"
+          showBack
+          onBack={activeView === 'location'
+            ? () => setActiveView('tour')
+            : () => navigate(backUrl)
+          }
+          hideMobileNav={false}
+          compact
+        />
+      </div>
+
       {!isTransitioning && (
         <>
-          <BrandingBadge project={project} logos={logos} />
-          <TopNav
-            activeSection={activeSection}
-            onNavigate={handleNavigate}
-            onContactOpen={() => setContactOpen(true)}
-            showBack
-            onBack={activeView === 'location'
-              ? () => setActiveView('tour')
-              : () => navigate(backUrl)
-            }
-          />
+          {activeView === 'tour' && <SocialButtons project={project} />}
         </>
       )}
 
