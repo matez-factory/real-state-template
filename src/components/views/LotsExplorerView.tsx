@@ -205,6 +205,7 @@ export function LotsExplorerView({
                     entities={entityConfigs}
                     backgroundUrl={undefined}
                     backgroundMobileUrl={undefined}
+                    variant="lots"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">

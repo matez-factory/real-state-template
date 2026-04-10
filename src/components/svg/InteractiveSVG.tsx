@@ -196,7 +196,7 @@ export function InteractiveSVG({
           }
         } else {
           element.style.fill = 'rgba(255, 255, 255, 0.15)';
-          if (bgShape) bgShape.setAttribute('fill', 'rgba(0, 0, 0, 0.85)');
+          if (bgShape) bgShape.setAttribute('fill', 'rgba(214, 214, 214, 0.45)');
         }
         if (labelDot) {
           labelDot.setAttribute('cy', labelDot.getAttribute('data-hover-cy') ?? '0');
@@ -233,7 +233,7 @@ export function InteractiveSVG({
           }
         } else {
           element.style.fill = 'transparent';
-          if (bgShape) bgShape.setAttribute('fill', 'rgba(0, 0, 0, 0.45)');
+          if (bgShape) bgShape.setAttribute('fill', 'rgba(233, 233, 233, 0.81)');
         }
         if (labelDot) {
           labelDot.setAttribute('cy', labelDot.getAttribute('data-rest-cy') ?? '0');
@@ -411,7 +411,9 @@ export function InteractiveSVG({
           bgRect.setAttribute('width', String(textWidth));
           bgRect.setAttribute('height', '26');
           bgRect.setAttribute('rx', '13');
-          bgRect.setAttribute('fill', 'rgba(0, 0, 0, 0.45)');
+          bgRect.setAttribute('fill', 'rgba(233, 233, 233, 0.81)');
+          bgRect.setAttribute('stroke', 'rgba(255, 255, 255, 0.4)');
+          bgRect.setAttribute('stroke-width', '1.4');
           bgRect.style.transition = 'fill 0.2s ease';
           bgShape = bgRect;
 
@@ -424,10 +426,10 @@ export function InteractiveSVG({
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', String(-textWidth / 2 + 23));
           text.setAttribute('y', '4');
-          text.setAttribute('font-family', 'system-ui, sans-serif');
+          text.setAttribute('font-family', "'Poppins', system-ui, sans-serif");
           text.setAttribute('font-size', '12');
           text.setAttribute('font-weight', '600');
-          text.setAttribute('fill', '#ffffff');
+          text.setAttribute('fill', '#484848');
           text.textContent = entity.label;
 
           scaleGroup.appendChild(bgRect);
