@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Ruler, Grid3X3 } from 'lucide-react';
 import type { Layer, Media, Project } from '@/types/hierarchy.types';
 import { FadeImage } from '@/components/shared/FadeImage';
 import { UnitStatusBadge } from '@/components/unit/UnitStatusBadge';
-import { UnitFeatureRow } from '@/components/unit/UnitFeatureRow';
+import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
@@ -27,23 +27,6 @@ const MOBILE_NAV_ITEMS: { section: 'home' | 'map' | 'location'; label: string }[
   { section: 'location', label: 'Ubicación' },
 ];
 
-const outerGlassStyle: React.CSSProperties = {
-  background: 'rgba(214, 214, 214, 0.45)',
-  backgroundBlendMode: 'luminosity',
-  backdropFilter: 'blur(50px)',
-  WebkitBackdropFilter: 'blur(50px)',
-  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-  borderRadius: '28px',
-  border: '1.4px solid rgba(255, 255, 255, 0.4)',
-};
-
-const innerCardStyle: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.7)',
-  boxShadow: 'inset 0px 0px 16px rgba(255, 255, 255, 0.05), inset 0px 4px 4px rgba(255, 255, 255, 0.15)',
-  backdropFilter: 'blur(14px)',
-  WebkitBackdropFilter: 'blur(14px)',
-  borderRadius: '20px',
-};
 
 export function LotFichaOverlay({
   lot,
@@ -56,6 +39,19 @@ export function LotFichaOverlay({
 }: LotFichaOverlayProps) {
   const [expanded, setExpanded] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+
+  // Drag-to-expand gesture
+  const dragStartY = useRef<number | null>(null);
+  const handleDragStart = useCallback((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+  }, []);
+  const handleDragEnd = useCallback((e: React.TouchEvent) => {
+    if (dragStartY.current == null) return;
+    const dy = dragStartY.current - e.changedTouches[0].clientY;
+    dragStartY.current = null;
+    if (dy > 40 && !expanded) setExpanded(true);
+    if (dy < -40 && expanded) setExpanded(false);
+  }, [expanded]);
 
   const fichaImage = media.find(
     (m) => m.purpose === 'ficha_furnished' || m.purpose === 'thumbnail'
@@ -85,6 +81,27 @@ export function LotFichaOverlay({
     }
     return items;
   }, [dimensions, area, areaLabel, lot.isCorner, features]);
+
+  // Adapt lot for UnitInfoCard: inject lot-specific data as features
+  const lotLayer = useMemo<Layer>(() => {
+    const lotFeatures: { icon: string; text: string }[] = [];
+    if (dimensions) lotFeatures.push({ icon: 'ruler', text: `Dimensiones ${dimensions}` });
+    if (area > 0) lotFeatures.push({ icon: 'grid-3x3', text: `Superficie ${area} ${areaLabel}` });
+    if (lot.isCorner) lotFeatures.push({ icon: 'corner-down-right', text: 'Esquina' });
+    for (const f of features) {
+      lotFeatures.push({ icon: f.icon, text: f.text });
+    }
+    return {
+      ...lot,
+      label: `Lote ${lot.label}`,
+      features: lotFeatures,
+      // Clear fields that UnitInfoCard would render separately
+      area: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      hasBalcony: undefined,
+    };
+  }, [lot, dimensions, area, areaLabel, features]);
 
   const handleNavClick = useCallback((section: string) => {
     onClose();
@@ -138,63 +155,14 @@ export function LotFichaOverlay({
         compact
       />
 
-      {/* Desktop/Landscape: Glass info card — matches UnitInfoCard */}
-      <div className="absolute left-[47px] top-1/2 -translate-y-1/2 z-30 hidden landscape:block landscape:max-lg:left-[10px] landscape:max-lg:origin-left landscape:max-lg:scale-[0.5]">
-        <div className="w-[337px] flex-shrink-0 overflow-hidden" style={outerGlassStyle}>
-          {previewImage?.url && (
-            <div className="w-full h-[170px] overflow-hidden" style={{ borderRadius: '28px 28px 0 0' }}>
-              <img src={previewImage.url} alt="" className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div
-            className="mx-[12px] mb-[12px] mt-[12px] overflow-y-auto max-h-[420px] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full"
-            style={innerCardStyle}
-          >
-            <div className="px-[24px] pt-[12px] pb-[16px]">
-              <div className="flex items-center justify-between">
-                <h2
-                  className="text-[26px] font-medium leading-[39px]"
-                  style={{ color: '#484848', fontFamily: poppins }}
-                >
-                  Lote {lot.label}
-                </h2>
-                <UnitStatusBadge status={lot.status} />
-              </div>
-
-              {priceFormatted && (
-                <span
-                  className="text-[24px] font-semibold leading-[36px] block"
-                  style={{ color: project.accentColor || '#1A1A1A', fontFamily: poppins }}
-                >
-                  {priceFormatted}
-                </span>
-              )}
-
-              {allFeatures.length > 0 && (
-                <div className="flex flex-col gap-[6px] mt-[12px]">
-                  {allFeatures.map((row, i) => (
-                    <UnitFeatureRow key={i} icon={row.icon} text={row.text} />
-                  ))}
-                </div>
-              )}
-
-              <div className="my-[14px]" style={{ borderTop: '1px solid #A49F9F', opacity: 0.14 }} />
-
-              <button
-                onClick={handleContact}
-                className="w-[254px] mx-auto h-[42px] flex items-center justify-center rounded-[69px] transition-opacity hover:opacity-90 outline-none"
-                style={{ background: project.accentColor || '#1A1A1A' }}
-              >
-                <span
-                  className="text-[20px] font-medium leading-[30px] capitalize"
-                  style={{ color: '#FFFFFF', fontFamily: poppins }}
-                >
-                  Solicitar Información
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Desktop/Landscape: Use UnitInfoCard directly — identical to building */}
+      <div className="absolute left-[47px] top-1/2 -translate-y-1/2 z-30 hidden landscape:block landscape:max-lg:left-[60px] landscape:max-lg:origin-left landscape:max-lg:scale-[0.5]">
+        <UnitInfoCard
+          layer={lotLayer}
+          thumbnailUrl={previewImage?.url}
+          accentColor={project.accentColor}
+          onContact={handleContact}
+        />
       </div>
 
       {/* Social buttons — desktop/landscape only */}
@@ -222,14 +190,22 @@ export function LotFichaOverlay({
             }}
           />
 
-          {/* Handle bar */}
-          <div className="relative z-10 flex justify-center pt-[8px] pb-[4px]">
+          {/* Handle bar — draggable, bigger touch target when expanded */}
+          <div
+            className={`relative z-10 flex justify-center cursor-grab ${expanded ? 'pt-[12px] pb-[8px]' : 'pt-[8px] pb-[4px]'}`}
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
             <div className="w-[36px] h-[4px] rounded-full bg-[#484848]/30" />
           </div>
 
           {/* ── Collapsed card ── */}
           {!expanded && (
-            <div className="relative z-10 px-[16px] pt-[4px] pb-[6px]">
+            <div
+              className="relative z-10 px-[16px] pt-[4px] pb-[6px]"
+              onTouchStart={handleDragStart}
+              onTouchEnd={handleDragEnd}
+            >
               <div className="flex items-center justify-between">
                 <UnitStatusBadge status={lot.status} />
                 {priceFormatted && (
