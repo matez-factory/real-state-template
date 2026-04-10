@@ -38,11 +38,10 @@ export function LocationView({ project }: LocationViewProps) {
   }
 
   return (
-    <div className="absolute inset-0 portrait:bottom-[91px] bg-black">
+    <div className="absolute inset-0 bg-black">
       <iframe
         src={embedSrc}
-        width="100%"
-        height="100%"
+        className="w-full h-full portrait:max-xl:h-[calc(100%-91px)]"
         style={{ border: 0 }}
         allowFullScreen
         loading="lazy"
@@ -51,7 +50,7 @@ export function LocationView({ project }: LocationViewProps) {
       />
 
       {mapQuery && (
-        <div className="absolute bottom-16 portrait:bottom-[16px] xl:bottom-6 left-0 right-0 z-10 flex items-center justify-center gap-[clamp(8px,1vw,14px)] pointer-events-none">
+        <div className="absolute bottom-16 portrait:max-xl:bottom-[100px] xl:bottom-6 left-0 right-0 z-10 flex items-center justify-center gap-[clamp(8px,1vw,14px)] pointer-events-none">
           <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`}
             target="_blank"

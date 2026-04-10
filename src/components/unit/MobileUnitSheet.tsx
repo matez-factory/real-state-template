@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
 import { getFeatureIcon } from '@/lib/constants/feature-icons';
@@ -86,6 +86,19 @@ export function MobileUnitSheet({
 
   const handleClose = useCallback(() => onExpandedChange(false), [onExpandedChange]);
 
+  // Drag-to-expand gesture
+  const dragStartY = useRef<number | null>(null);
+  const handleDragStart = useCallback((e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+  }, []);
+  const handleDragEnd = useCallback((e: React.TouchEvent) => {
+    if (dragStartY.current == null) return;
+    const dy = dragStartY.current - e.changedTouches[0].clientY;
+    dragStartY.current = null;
+    if (dy > 40 && !expanded) onExpandedChange(true);
+    if (dy < -40 && expanded) onExpandedChange(false);
+  }, [expanded, onExpandedChange]);
+
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-40 landscape:hidden"
@@ -109,16 +122,24 @@ export function MobileUnitSheet({
           }}
         />
 
-        {/* Handle bar */}
+        {/* Handle bar — draggable, bigger touch target when expanded */}
         {!hideCard && (
-          <div className="relative z-10 flex justify-center pt-[8px] pb-[4px]">
+          <div
+            className={`relative z-10 flex justify-center cursor-grab ${expanded ? 'pt-[12px] pb-[8px]' : 'pt-[8px] pb-[4px]'}`}
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
             <div className="w-[36px] h-[4px] rounded-full bg-[#484848]/30" />
           </div>
         )}
 
         {/* ── Collapsed card ── */}
         {!hideCard && !expanded && (
-          <div className="relative z-10 px-[16px] pt-[4px] pb-[6px]">
+          <div
+            className="relative z-10 px-[16px] pt-[4px] pb-[6px]"
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
             {/* Row 1: Status + Price */}
             <div className="flex items-center justify-between">
               <UnitStatusBadge status={status} />

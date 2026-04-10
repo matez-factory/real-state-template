@@ -344,6 +344,14 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
                 setHotspotCard({ visible: true, x: centerX, y: centerY });
               });
 
+              // Follow the mouse while hovering over the hotspot shape
+              shape.addEventListener('mousemove', (e) => {
+                const containerRect = container.getBoundingClientRect();
+                const mx = ((e as MouseEvent).clientX - containerRect.left) / containerRect.width * 100;
+                const my = ((e as MouseEvent).clientY - containerRect.top) / containerRect.height * 100;
+                setHotspotCard({ visible: true, x: mx, y: my });
+              });
+
               shape.addEventListener('mouseleave', () => {
                 // Delay hiding — check if mouse moved onto the card before actually hiding
                 hotspotHideTimer.current = setTimeout(() => {
@@ -563,7 +571,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
           style={{
             left: `${hotspotCard.x}%`,
             top: `${hotspotCard.y}%`,
-            transform: 'translate(-50%, -16px)',
+            transform: 'translate(-50%, -120%)',
           }}
           onMouseEnter={() => {
             isMouseOverCard.current = true;
@@ -580,7 +588,7 @@ export const Spin360Viewer = forwardRef<Spin360ViewerRef, Spin360ViewerProps>(fu
           {/* Tooltip — glass pill */}
           <button
             onClick={handleEnterBuilding}
-            className="px-[18px] py-[10px] rounded-[14px] text-[14px] font-semibold text-white hover:opacity-90 transition-opacity outline-none cursor-pointer"
+            className="px-[22px] py-[10px] rounded-full text-[14px] font-semibold text-white hover:opacity-90 transition-opacity outline-none cursor-pointer"
             style={{
               background: 'rgba(214, 214, 214, 0.45)',
               backgroundBlendMode: 'luminosity',
