@@ -80,6 +80,16 @@ export function InteractiveSVG({
        3. Clear any inline style.fill
        4. Inject a <style> that forces fill:none on all shapes
        We re-apply fills explicitly in entity setup below. */
+    /* Before removing <style> tags, bake stroke rules into inline styles so they survive */
+    svg.querySelectorAll('*').forEach((el) => {
+      const computed = window.getComputedStyle(el);
+      const stroke = computed.stroke;
+      const strokeWidth = computed.strokeWidth;
+      if (stroke && stroke !== 'none' && stroke !== 'rgba(0, 0, 0, 0)') {
+        (el as SVGElement).style.stroke = stroke;
+        if (strokeWidth) (el as SVGElement).style.strokeWidth = strokeWidth;
+      }
+    });
     svg.querySelectorAll('style').forEach((s) => s.remove());
     svg.querySelectorAll('*').forEach((el) => {
       el.removeAttribute('fill');
@@ -118,7 +128,8 @@ export function InteractiveSVG({
           element.style.fill = 'transparent';
           element.style.stroke = 'none';
         } else {
-          element.style.opacity = '0.3';
+          /* Lots: keep strokes (dividing lines) visible, only hide fills */
+          element.style.fill = 'transparent';
         }
       }
     });
