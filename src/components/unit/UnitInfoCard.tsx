@@ -99,13 +99,13 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
         </div>
       )}
 
-      {/* Inner white card — Figma: Rectangle 36, positioned with ~12px margin from outer edges */}
+      {/* Inner white card — flex column: header fixed, features scroll, footer fixed */}
       <div
-        className="mx-[12px] mb-[12px] mt-[12px] overflow-y-auto max-h-[420px] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+        className="mx-[12px] mb-[12px] mt-[12px] flex flex-col max-h-[420px]"
         style={innerCardStyle}
       >
-        <div className="px-[24px] pt-[12px] pb-[16px]">
-          {/* Row 1: Label + Status — Figma: same top line */}
+        {/* Fixed header: Name, Status, Price, Description */}
+        <div className="px-[24px] pt-[12px] flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2
               className="text-[26px] font-medium leading-[39px] capitalize"
@@ -116,7 +116,6 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
             <UnitStatusBadge status={status} />
           </div>
 
-          {/* Row 2: Model + Price — Figma: model left, price right */}
           <div className="flex items-baseline justify-between">
             {unitTypeName ? (
               <p
@@ -137,7 +136,6 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
             )}
           </div>
 
-          {/* Description */}
           {description && (
             <p
               className="text-[14px] leading-[20px] mt-[8px]"
@@ -146,24 +144,25 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
               {description}
             </p>
           )}
+        </div>
 
-          {/* Instalaciones — Figma: Poppins 500 16px #484848, top:283 */}
-          {featureRows.length > 0 && (
-            <>
-              <div className="flex flex-col gap-[6px] mt-[12px]">
-                {featureRows.map((row, i) => (
-                  <UnitFeatureRow key={i} icon={row.icon} text={row.text} />
-                ))}
-              </div>
-            </>
-          )}
+        {/* Scrollable features */}
+        {featureRows.length > 0 && (
+          <div className="px-[24px] mt-[12px] overflow-y-auto flex-1 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-black/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="flex flex-col gap-[6px]">
+              {featureRows.map((row, i) => (
+                <UnitFeatureRow key={i} icon={row.icon} text={row.text} />
+              ))}
+            </div>
+          </div>
+        )}
 
-          {/* Divider — Figma: Vector 16, 262px wide, opacity 0.14, 1px #A49F9F */}
+        {/* Fixed footer: Divider + CTA */}
+        <div className="px-[24px] pb-[16px] flex-shrink-0">
           <div className="my-[14px]">
             <div style={{ borderTop: '1px solid #A49F9F', opacity: 0.14 }} />
           </div>
 
-          {/* CTA — Figma: 254×42, bg #1A1A1A, rounded-69, Poppins 500 20px #FFFFFF */}
           <button
             onClick={onContact}
             className="w-[254px] mx-auto h-[42px] flex items-center justify-center rounded-[69px] transition-opacity hover:opacity-90 outline-none"
