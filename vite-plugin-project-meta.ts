@@ -29,12 +29,10 @@ export function projectMetaPlugin(): Plugin {
       }
 
       // BUILD_API_URL for build-time access (not exposed to client).
-      // Defaults to production URL, or localhost in dev mode.
+      // Defaults to localhost for local dev/builds.
+      // In production CI (Vercel), set BUILD_API_URL env var to production API.
       const apiBase =
-        process.env.BUILD_API_URL ||
-        (config.mode === 'production'
-          ? 'https://real-state-api-mu32.onrender.com/api/v1'
-          : 'http://localhost:8080/api/v1');
+        process.env.BUILD_API_URL || 'http://localhost:8080/api/v1';
 
       const url = `${apiBase}/projects/by-slug/${slug}`;
       console.log(`[project-meta] Fetching project meta from ${url}`);
