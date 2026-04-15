@@ -29,10 +29,12 @@ export function projectMetaPlugin(): Plugin {
       }
 
       // BUILD_API_URL for build-time access (not exposed to client).
-      // Falls back to proxy target + VITE_API_URL path.
+      // Defaults to production URL, or localhost in dev mode.
       const apiBase =
         process.env.BUILD_API_URL ||
-        `http://localhost:8081${config.env?.VITE_API_URL || '/api/v1'}`;
+        (config.mode === 'production'
+          ? 'https://real-state-api-mu32.onrender.com/api/v1'
+          : 'http://localhost:8080/api/v1');
 
       const url = `${apiBase}/projects/by-slug/${slug}`;
       console.log(`[project-meta] Fetching project meta from ${url}`);
