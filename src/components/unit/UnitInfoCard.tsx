@@ -61,7 +61,14 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
     if (area && area > 0) {
       rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
     }
-    if (bedrooms != null) {
+    // Monoambiente: either bedrooms === 0 or description explicitly says so.
+    // When monoambiente, we show the bed icon + "Monoambiente" (overrides bedrooms count).
+    const isMonoambiente =
+      bedrooms === 0 ||
+      (typeof description === 'string' && description.toLowerCase().includes('monoambiente'));
+    if (isMonoambiente) {
+      rows.push({ icon: BedDouble, text: 'Monoambiente' });
+    } else if (bedrooms != null) {
       rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
     }
     if (bathrooms != null) {
@@ -88,7 +95,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
     }
 
     return rows;
-  }, [area, areaLabel, areaSqft, bedrooms, bathrooms, hasBalcony, features]);
+  }, [area, areaLabel, areaSqft, bedrooms, bathrooms, hasBalcony, features, description]);
 
   return (
     <div className="w-[337px] flex-shrink-0 overflow-hidden" style={outerGlassStyle}>
@@ -136,7 +143,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
             )}
           </div>
 
-          {description && (
+          {description && description.trim().toLowerCase() !== 'monoambiente' && (
             <p
               className="text-[14px] leading-[20px] mt-[8px]"
               style={{ color: '#757474', fontFamily: poppins }}

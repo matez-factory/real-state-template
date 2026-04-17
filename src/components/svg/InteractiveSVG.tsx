@@ -4,6 +4,9 @@ import { STATUS_LABELS } from '@/lib/constants/status';
 
 interface SVGEntityConfig {
   id: string;
+  /** Optional SVG parent group ID. When present, the matcher looks for `#_group #id`
+   *  to disambiguate polygons that repeat across groups (e.g. lote _01 in manzana I vs B). */
+  groupId?: string;
   label: string;
   status: EntityStatus;
   onClick: () => void;
@@ -137,7 +140,27 @@ export function InteractiveSVG({
     const listeners: ListenerEntry[] = [];
 
     entities.forEach((entity) => {
-      let element = svg.querySelector(`#${CSS.escape(entity.id)}`) as SVGElement | null;
+      let element: SVGElement | null = null;
+
+      // If entity has a groupId, match nested: #_group #id
+      // SVG exports prefix IDs with "_" (e.g. <g id="_I">). The CSV stores the
+      // raw form ("I") without the prefix, so we try both with and without "_".
+      if (entity.groupId) {
+        const groupWith = entity.groupId.startsWith('_') ? entity.groupId : `_${entity.groupId}`;
+        const groupWithout = entity.groupId.startsWith('_') ? entity.groupId.slice(1) : entity.groupId;
+        for (const g of [groupWith, groupWithout]) {
+          for (const childId of [entity.id, entity.id.startsWith('_') ? entity.id.slice(1) : `_${entity.id}`]) {
+            element = svg.querySelector(`#${CSS.escape(g)} #${CSS.escape(childId)}`) as SVGElement | null;
+            if (element) break;
+          }
+          if (element) break;
+        }
+      }
+
+      // Fallback: flat lookup (legacy projects without group_element_id)
+      if (!element) {
+        element = svg.querySelector(`#${CSS.escape(entity.id)}`) as SVGElement | null;
+      }
       // Fallback: try suffix after last dash (e.g. "14-a" → "a"), then uppercase ("A")
       if (!element && entity.id.includes('-')) {
         const suffix = entity.id.split('-').pop()!;
