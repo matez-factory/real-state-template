@@ -6,6 +6,7 @@ import { useIsMobilePortrait } from '@/hooks/useIsMobilePortrait';
 import { TopNav } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
+import { Disclaimer } from '@/components/shared/Disclaimer';
 import { LocationView } from '@/components/navigation/LocationView';
 import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
 import { UnitMediaViewer } from '@/components/unit/UnitMediaViewer';
@@ -329,6 +330,8 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
         open={contactOpen}
         onClose={() => setContactOpen(false)}
       />
+
+      <Disclaimer project={project} mobileBottomClass="bottom-[250px]" />
     </div>
   );
 }

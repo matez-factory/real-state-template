@@ -5,6 +5,7 @@ import { Spin360Viewer, type Spin360ViewerRef } from '@/components/video/Spin360
 import { MobileHint } from '@/components/shared/MobileHint';
 import { TopNav } from '@/components/navigation/TopNav';
 import { ContactModal } from '@/components/navigation/ContactModal';
+import { Disclaimer } from '@/components/shared/Disclaimer';
 import { LocationView } from '@/components/navigation/LocationView';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { GlassArrows } from '@/components/shared/GlassArrows';
@@ -179,6 +180,8 @@ export function LotsHomePage({ data }: LotsHomePageProps) {
         open={contactOpen}
         onClose={() => setContactOpen(false)}
       />
+
+      <Disclaimer project={project} mobileBottomClass="bottom-[170px]" />
     </div>
   );
 }

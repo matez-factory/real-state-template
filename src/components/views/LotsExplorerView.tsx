@@ -6,6 +6,7 @@ import { InteractiveSVG } from '@/components/svg/InteractiveSVG';
 import { TopNav } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
+import { Disclaimer } from '@/components/shared/Disclaimer';
 import { LocationView } from '@/components/navigation/LocationView';
 import { LotFichaOverlay } from '@/components/lots/LotFichaOverlay';
 import { preloadImage } from '@/lib/preload';
@@ -111,6 +112,7 @@ export function LotsExplorerView({
     () =>
       children.map((child) => ({
         id: child.svgElementId ?? child.slug,
+        groupId: child.groupElementId,
         label: child.label,
         status: child.status,
         onClick: () => {
@@ -251,6 +253,8 @@ export function LotsExplorerView({
         open={contactOpen}
         onClose={() => setContactOpen(false)}
       />
+
+      <Disclaimer project={project} />
     </div>
   );
 }
