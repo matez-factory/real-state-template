@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
+import { Ruler, BedDouble, Bath, Fence, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
 import { getFeatureIcon } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
@@ -31,7 +31,6 @@ const innerCardStyle: React.CSSProperties = {
   borderRadius: '20px',
 };
 
-const M2_TO_SQFT = 10.7639;
 const poppins = "'Poppins', system-ui, sans-serif";
 
 interface UnitInfoCardProps {
@@ -48,7 +47,6 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
   } = layer;
 
   const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
-  const areaSqft = area && areaUnit !== 'ft2' ? Math.round(area * M2_TO_SQFT * 100) / 100 : null;
 
   const priceFormatted = useMemo(() => {
     if (!price || price <= 0) return null;
@@ -83,19 +81,12 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
 
     if (features) {
       for (const f of features) {
-        const iconName = f.icon?.toLowerCase() ?? '';
-        if (iconName === 'washing-machine' || f.text.toLowerCase().includes('lavander')) {
-          rows.push({ icon: WashingMachine, text: f.text });
-        } else if (iconName === 'parking-circle' || iconName === 'car' || f.text.toLowerCase().includes('parking') || f.text.toLowerCase().includes('cochera')) {
-          rows.push({ icon: Car, text: f.text });
-        } else {
-          rows.push({ icon: getFeatureIcon(f.icon), text: f.text });
-        }
+        rows.push({ icon: getFeatureIcon(f.icon, f.text), text: f.text });
       }
     }
 
     return rows;
-  }, [area, areaLabel, areaSqft, bedrooms, bathrooms, hasBalcony, features, description]);
+  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony, orientation, features, description]);
 
   return (
     <div className="w-[337px] flex-shrink-0 overflow-hidden" style={outerGlassStyle}>
