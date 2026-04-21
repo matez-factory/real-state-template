@@ -72,6 +72,10 @@ export interface Project {
   secondaryLogoUrl?: string;
   tagline?: string;
 
+  // Disclaimer (legal footer rendered in all views except splash)
+  disclaimerEnabled?: boolean;
+  disclaimerText?: string;
+
   // Contact
   phone?: string;
   email?: string;
@@ -118,6 +122,7 @@ export interface Layer {
   path?: string;
   parentName?: string;
   svgElementId?: string;
+  groupElementId?: string;
   status: EntityStatus;
 
   // Visual assets

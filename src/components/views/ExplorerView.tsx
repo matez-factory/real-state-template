@@ -7,6 +7,7 @@ import { SiblingNavigator } from '@/components/navigation/SiblingNavigator';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
+import { Disclaimer } from '@/components/shared/Disclaimer';
 import { LocationView } from '@/components/navigation/LocationView';
 import { preloadImage, preloadSvg } from '@/lib/preload';
 
@@ -125,6 +126,7 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
     () =>
       children.map((child) => ({
         id: child.svgElementId ?? child.slug,
+        groupId: child.groupElementId,
         label: child.label,
         status: child.status,
         onClick: () => navigateRef.current(`${basePath}/${child.slug}`),
@@ -382,6 +384,15 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
         logos={logos}
         open={contactOpen}
         onClose={() => setContactOpen(false)}
+      />
+
+      <Disclaimer
+        project={project}
+        mobileBottomClass={
+          activeView === 'map' && showSiblings
+            ? 'bottom-[180px]'
+            : 'bottom-[100px]'
+        }
       />
     </div>
   );

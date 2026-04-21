@@ -41,6 +41,8 @@ export interface RawProject {
   logo_url: string | null;
   secondary_logo_url: string | null;
   tagline: string | null;
+  disclaimer_enabled: boolean | null;
+  disclaimer_text: string | null;
 
   phone: string | null;
   email: string | null;
@@ -80,6 +82,7 @@ export interface RawLayer {
   path: string | null;
   parent_name: string | null;
   svg_element_id: string | null;
+  group_element_id: string | null;
   status: string;
 
   svg_overlay_url: string | null;
@@ -173,6 +176,8 @@ export function transformProject(raw: RawProject): Project {
     logoUrl: raw.logo_url || undefined,
     secondaryLogoUrl: raw.secondary_logo_url || undefined,
     tagline: raw.tagline || undefined,
+    disclaimerEnabled: raw.disclaimer_enabled ?? false,
+    disclaimerText: raw.disclaimer_text || undefined,
     phone: raw.phone || undefined,
     email: raw.email || undefined,
     whatsapp: raw.whatsapp || undefined,
@@ -214,6 +219,7 @@ export function transformLayer(raw: RawLayer): Layer {
     path: raw.path || undefined,
     parentName: raw.parent_name || undefined,
     svgElementId: raw.svg_element_id || undefined,
+    groupElementId: raw.group_element_id || undefined,
     status: raw.status as EntityStatus,
 
     svgOverlayUrl: raw.svg_overlay_url || undefined,
@@ -295,6 +301,7 @@ export function buildExplorerPageData(
       if (ut) {
         if (!layer.unitTypeName) layer.unitTypeName = ut.name;
         // Fallback: unit_type fills in missing layer fields
+        if ((layer.area == null || layer.area === 0) && ut.area != null) layer.area = ut.area;
         if ((layer.bedrooms == null || layer.bedrooms === 0) && ut.bedrooms != null) layer.bedrooms = ut.bedrooms;
         if ((layer.bathrooms == null || layer.bathrooms === 0) && ut.bathrooms != null) layer.bathrooms = ut.bathrooms;
         if (layer.description == null && ut.description) layer.description = ut.description;

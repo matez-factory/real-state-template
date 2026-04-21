@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
+import { Ruler, BedDouble, Bath, Fence, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
 import { getFeatureIcon, type FeatureIconValue } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
@@ -59,7 +59,14 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
     if (area && area > 0) {
       rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
     }
-    if (bedrooms != null) {
+    // Monoambiente: either bedrooms === 0 or description explicitly says so.
+    // When monoambiente, we show the bed icon + "Monoambiente" (overrides bedrooms count).
+    const isMonoambiente =
+      bedrooms === 0 ||
+      (typeof description === 'string' && description.toLowerCase().includes('monoambiente'));
+    if (isMonoambiente) {
+      rows.push({ icon: BedDouble, text: 'Monoambiente' });
+    } else if (bedrooms != null) {
       rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
     }
     if (bathrooms != null) {
@@ -74,14 +81,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
 
     if (features) {
       for (const f of features) {
-        const iconName = f.icon?.toLowerCase() ?? '';
-        if (iconName === 'washing-machine' || f.text.toLowerCase().includes('lavander')) {
-          rows.push({ icon: WashingMachine, text: f.text });
-        } else if (iconName === 'parking-circle' || iconName === 'car' || f.text.toLowerCase().includes('parking') || f.text.toLowerCase().includes('cochera')) {
-          rows.push({ icon: Car, text: f.text });
-        } else {
-          rows.push({ icon: getFeatureIcon(f.icon), text: f.text });
-        }
+        rows.push({ icon: getFeatureIcon(f.icon, f.text), text: f.text });
       }
     }
 
@@ -109,7 +109,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
               className="text-[26px] font-medium leading-[39px] capitalize"
               style={{ color: '#484848', fontFamily: poppins }}
             >
-              {label}
+              {name}
             </h2>
             <UnitStatusBadge status={status} />
           </div>
@@ -125,7 +125,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
             )}
           </div>
 
-          {description && (
+          {description && description.trim().toLowerCase() !== 'monoambiente' && (
             <p
               className="text-[14px] leading-[20px] mt-[8px]"
               style={{ color: '#757474', fontFamily: poppins }}

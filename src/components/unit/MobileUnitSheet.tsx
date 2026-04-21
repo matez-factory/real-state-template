@@ -55,17 +55,34 @@ export function MobileUnitSheet({
   const compactFeatures = useMemo(() => {
     const items: { icon: string; text: string }[] = [];
     if (area && area > 0) items.push({ icon: 'ruler', text: `${area} ${areaLabel}` });
-    if (bedrooms != null) items.push({ icon: 'bed', text: `${bedrooms}` });
+    // In compact view, monoambientes show "Mono" instead of a misleading "0"
+    if (bedrooms === 0 || (typeof description === 'string' && description.toLowerCase().includes('monoambiente'))) {
+      items.push({ icon: 'bed', text: 'Mono' });
+    } else if (bedrooms != null) {
+      items.push({ icon: 'bed', text: `${bedrooms}` });
+    }
     if (bathrooms != null) items.push({ icon: 'bath', text: `${bathrooms}` });
     if (hasBalcony) items.push({ icon: 'fence', text: 'Balcón' });
     return items;
-  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony]);
+  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony, description]);
+
+  // Monoambiente check: bedrooms 0 OR description explicitly says "monoambiente"
+  const isMonoambiente = useMemo(
+    () =>
+      bedrooms === 0 ||
+      (typeof description === 'string' && description.toLowerCase().includes('monoambiente')),
+    [bedrooms, description]
+  );
 
   // Full features for expanded state
   const featureRows = useMemo(() => {
     const rows: { icon: FeatureIconValue; text: string }[] = [];
     if (area && area > 0) rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
-    if (bedrooms != null) rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
+    if (isMonoambiente) {
+      rows.push({ icon: BedDouble, text: 'Monoambiente' });
+    } else if (bedrooms != null) {
+      rows.push({ icon: BedDouble, text: `${bedrooms} Dormitorio${bedrooms !== 1 ? 's' : ''}` });
+    }
     if (bathrooms != null) rows.push({ icon: Bath, text: `${bathrooms} Baño${bathrooms !== 1 ? 's' : ''}` });
     if (hasBalcony) rows.push({ icon: Fence, text: 'Balcón' });
     if (orientation) rows.push({ icon: Compass, text: `Orientación ${orientation}` });
@@ -82,7 +99,7 @@ export function MobileUnitSheet({
       }
     }
     return rows;
-  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony, features]);
+  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony, features, orientation, isMonoambiente]);
 
   const handleClose = useCallback(() => onExpandedChange(false), [onExpandedChange]);
 
@@ -225,8 +242,8 @@ export function MobileUnitSheet({
                 )}
               </div>
 
-              {/* Description */}
-              {description && (
+              {/* Description — hide if it's just "Monoambiente" (rendered as a feature row) */}
+              {description && description.trim().toLowerCase() !== 'monoambiente' && (
                 <p className="text-[13px] leading-[18px] mt-[8px]" style={{ color: '#757474', fontFamily: poppins }}>
                   {description}
                 </p>

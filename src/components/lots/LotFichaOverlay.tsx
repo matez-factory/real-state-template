@@ -5,6 +5,7 @@ import type { Layer, Media, Project } from '@/types/hierarchy.types';
 import { FadeImage } from '@/components/shared/FadeImage';
 import { UnitStatusBadge } from '@/components/unit/UnitStatusBadge';
 import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
+import { UnitFeatureRow } from '@/components/unit/UnitFeatureRow';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
@@ -78,7 +79,7 @@ export function LotFichaOverlay({
     if (area > 0) items.push({ icon: Grid3X3, text: `Superficie ${area} ${areaLabel}` });
     if (lot.isCorner) items.push({ icon: getFeatureIcon('corner-down-right'), text: 'Lote en esquina' });
     for (const f of features) {
-      items.push({ icon: getFeatureIcon(f.icon), text: f.text });
+      items.push({ icon: getFeatureIcon(f.icon, f.text), text: f.text });
     }
     return items;
   }, [dimensions, area, areaLabel, lot.isCorner, features]);
@@ -297,7 +298,7 @@ export function LotFichaOverlay({
 
                 {/* Features (includes dimensions + area + custom features) */}
                 {allFeatures.length > 0 && (
-                  <div className="flex flex-col gap-[5px] mt-[12px]">
+                  <div className="flex flex-col gap-[6px] mt-[12px]">
                     {allFeatures.map((f, i) => (
                       <div key={i} className="flex items-center gap-[8px]">
                         {typeof f.icon === 'string' ? (
