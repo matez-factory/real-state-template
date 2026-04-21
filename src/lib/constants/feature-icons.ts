@@ -19,18 +19,25 @@ import {
   Sofa,
   CookingPot,
   ShowerHead,
+  Home,
+  Leaf,
+  CornerDownRight,
+  WashingMachine,
   Ruler,
   Grid3X3,
-  CornerDownRight,
   BedDouble,
   Bath,
   Fence,
   Compass,
-  WashingMachine,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+/** Si el valor de icon es una URL (http/https o ruta relativa), se renderiza como <img>.
+ *  De lo contrario, se busca en el mapa de Lucide. */
+export type FeatureIconValue = LucideIcon | string;
+
 export const FEATURE_ICON_MAP: Record<string, LucideIcon> = {
+  // Canónicos (alineados con el admin)
   flame: Flame,
   car: Car,
   'dollar-sign': DollarSign,
@@ -51,14 +58,21 @@ export const FEATURE_ICON_MAP: Record<string, LucideIcon> = {
   sofa: Sofa,
   'cooking-pot': CookingPot,
   'shower-head': ShowerHead,
+  'corner-down-right': CornerDownRight,
+  'washing-machine': WashingMachine,
   ruler: Ruler,
   'grid-3x3': Grid3X3,
-  'corner-down-right': CornerDownRight,
   'bed-double': BedDouble,
   bath: Bath,
   fence: Fence,
   compass: Compass,
-  'washing-machine': WashingMachine,
+  // Aliases legacy (admin usaba estos nombres antes de la corrección)
+  tree: TreePine,
+  water: Droplets,
+  pool: Waves,
+  home: Home,
+  garden: Leaf,
+  leaf: Leaf,
 };
 
 export const DEFAULT_FEATURE_ICON = Flame;
@@ -109,7 +123,17 @@ function resolveByText(text: string | undefined): LucideIcon | null {
   return null;
 }
 
-export function getFeatureIcon(name?: string | null, text?: string): LucideIcon {
+/** Devuelve:
+ *  - la URL literal si `name` es una URL (http/https o empieza con `/`),
+ *    para que los componentes la rendericen como <img>.
+ *  - un LucideIcon si `name` está en el mapa.
+ *  - un LucideIcon resuelto por keywords en `text` si el nombre es genérico.
+ *  - el ícono por defecto como fallback. */
+export function getFeatureIcon(name?: string | null, text?: string): FeatureIconValue {
+  if (name && (name.startsWith('http://') || name.startsWith('https://') || name.startsWith('/'))) {
+    return name;
+  }
+
   const key = name?.toLowerCase() ?? '';
 
   if (key && !GENERIC_ICON_NAMES.has(key) && FEATURE_ICON_MAP[key]) {

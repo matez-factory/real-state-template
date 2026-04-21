@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useRef } from 'react';
 import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
-import { getFeatureIcon } from '@/lib/constants/feature-icons';
+import { getFeatureIcon, type FeatureIconValue } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
 import { MobileTabIcon } from '@/components/navigation/TopNav';
 
@@ -76,7 +76,7 @@ export function MobileUnitSheet({
 
   // Full features for expanded state
   const featureRows = useMemo(() => {
-    const rows: { icon: typeof Ruler; text: string }[] = [];
+    const rows: { icon: FeatureIconValue; text: string }[] = [];
     if (area && area > 0) rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
     if (isMonoambiente) {
       rows.push({ icon: BedDouble, text: 'Monoambiente' });
@@ -258,7 +258,11 @@ export function MobileUnitSheet({
                   <div className="flex flex-col gap-[5px]">
                     {featureRows.map((row, i) => (
                       <div key={i} className="flex items-center gap-[8px]">
-                        <row.icon className="w-[16px] h-[16px] flex-shrink-0" style={{ color: '#5A5A5A', strokeWidth: 1.5 }} />
+                        {typeof row.icon === 'string' ? (
+                          <img src={row.icon} alt="" className="w-[16px] h-[16px] shrink-0 object-contain" />
+                        ) : (
+                          (() => { const Icon = row.icon; return <Icon className="w-[16px] h-[16px] shrink-0" style={{ color: '#5A5A5A', strokeWidth: 1.5 }} />; })()
+                        )}
                         <span className="text-[13px] font-normal capitalize" style={{ color: '#7D7D7D', fontFamily: poppins }}>
                           {row.text}
                         </span>

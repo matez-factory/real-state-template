@@ -204,7 +204,7 @@ export interface UnitType {
   hasBalcony?: boolean;
   orientation?: string;
   features?: FeatureItem[];
-  tourEmbedUrl?: string;
+  tourUrl?: string;
   videoUrl?: string;
 }
 

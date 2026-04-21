@@ -1,14 +1,14 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { Ruler, Grid3X3 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Layer, Media, Project } from '@/types/hierarchy.types';
 import { FadeImage } from '@/components/shared/FadeImage';
 import { UnitStatusBadge } from '@/components/unit/UnitStatusBadge';
 import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
-import { UnitFeatureRow } from '@/components/unit/UnitFeatureRow';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';
-import { getFeatureIcon } from '@/lib/constants/feature-icons';
+import { getFeatureIcon, type FeatureIconValue } from '@/lib/constants/feature-icons';
 
 interface LotFichaOverlayProps {
   lot: Layer;
@@ -73,10 +73,10 @@ export function LotFichaOverlay({
   }, [price]);
 
   const allFeatures = useMemo(() => {
-    const items: { icon: typeof Ruler; text: string }[] = [];
+    const items: { icon: FeatureIconValue; text: string }[] = [];
     if (dimensions) items.push({ icon: Ruler, text: `Dimensiones ${dimensions}` });
     if (area > 0) items.push({ icon: Grid3X3, text: `Superficie ${area} ${areaLabel}` });
-    if (lot.isCorner) items.push({ icon: getFeatureIcon('corner-down-right'), text: 'Esquina' });
+    if (lot.isCorner) items.push({ icon: getFeatureIcon('corner-down-right'), text: 'Lote en esquina' });
     for (const f of features) {
       items.push({ icon: getFeatureIcon(f.icon, f.text), text: f.text });
     }
@@ -88,7 +88,7 @@ export function LotFichaOverlay({
     const lotFeatures: { icon: string; text: string }[] = [];
     if (dimensions) lotFeatures.push({ icon: 'ruler', text: `Dimensiones ${dimensions}` });
     if (area > 0) lotFeatures.push({ icon: 'grid-3x3', text: `Superficie ${area} ${areaLabel}` });
-    if (lot.isCorner) lotFeatures.push({ icon: 'corner-down-right', text: 'Esquina' });
+    if (lot.isCorner) lotFeatures.push({ icon: 'corner-down-right', text: 'Lote en esquina' });
     for (const f of features) {
       lotFeatures.push({ icon: f.icon, text: f.text });
     }
@@ -299,7 +299,16 @@ export function LotFichaOverlay({
                 {allFeatures.length > 0 && (
                   <div className="flex flex-col gap-[6px] mt-[12px]">
                     {allFeatures.map((f, i) => (
-                      <UnitFeatureRow key={i} icon={f.icon} text={f.text} />
+                      <div key={i} className="flex items-center gap-[8px]">
+                        {typeof f.icon === 'string' ? (
+                          <img src={f.icon} alt="" className="w-[16px] h-[16px] shrink-0 object-contain" />
+                        ) : (
+                          (() => { const Icon = f.icon as LucideIcon; return <Icon className="w-[16px] h-[16px] shrink-0" style={{ color: '#5A5A5A', strokeWidth: 1.5 }} />; })()
+                        )}
+                        <span className="text-[13px]" style={{ color: '#7D7D7D', fontFamily: poppins }}>
+                          {f.text}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 )}
