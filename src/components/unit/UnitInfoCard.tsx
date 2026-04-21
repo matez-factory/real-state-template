@@ -42,7 +42,7 @@ interface UnitInfoCardProps {
 
 export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: UnitInfoCardProps) {
   const {
-    label, status, unitTypeName, price, description, orientation,
+    name, status, unitTypeName, price, description, orientation,
     area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
 
@@ -109,7 +109,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
               className="text-[26px] font-medium leading-[39px] capitalize"
               style={{ color: '#484848', fontFamily: poppins }}
             >
-              {label}
+              {name}
             </h2>
             <UnitStatusBadge status={status} />
           </div>
