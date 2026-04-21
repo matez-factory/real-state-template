@@ -135,6 +135,7 @@ export interface RawUnitType {
   project_id: string;
   name: string;
   slug: string | null;
+  asset_type: string | null;
   area: number | null;
   area_unit: string | null;
   bedrooms: number | null;
@@ -143,6 +144,8 @@ export interface RawUnitType {
   has_balcony: boolean | null;
   orientation: string | null;
   features: { icon: string; text: string }[] | null;
+  tour_360_url: string | null;
+  video_url: string | null;
 }
 
 // ============================================================
@@ -298,6 +301,11 @@ export function buildExplorerPageData(
         if (layer.hasBalcony == null && ut.has_balcony != null) layer.hasBalcony = ut.has_balcony;
         if (layer.orientation == null && ut.orientation) layer.orientation = ut.orientation;
         if ((layer.features == null || layer.features.length === 0) && ut.features && ut.features.length > 0) layer.features = ut.features;
+        // Tour 360 y video URL: si la unidad no sobrescribe, heredar del tipo.
+        if (!layer.tourEmbedUrl && ut.tour_360_url) layer.tourEmbedUrl = ut.tour_360_url;
+        if (!layer.videoUrl && ut.video_url) layer.videoUrl = ut.video_url;
+        if (!layer.area && ut.area != null) layer.area = ut.area;
+        if (!layer.areaUnit && ut.area_unit) layer.areaUnit = ut.area_unit;
       }
     }
     return layer;

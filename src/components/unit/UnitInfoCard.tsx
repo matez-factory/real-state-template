@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Ruler, BedDouble, Bath, Fence, WashingMachine, Car, Compass } from 'lucide-react';
 import type { Layer } from '@/types/hierarchy.types';
-import { getFeatureIcon } from '@/lib/constants/feature-icons';
+import { getFeatureIcon, type FeatureIconValue } from '@/lib/constants/feature-icons';
 import { UnitStatusBadge } from './UnitStatusBadge';
 import { UnitFeatureRow } from './UnitFeatureRow';
 
@@ -31,7 +31,6 @@ const innerCardStyle: React.CSSProperties = {
   borderRadius: '20px',
 };
 
-const M2_TO_SQFT = 10.7639;
 const poppins = "'Poppins', system-ui, sans-serif";
 
 interface UnitInfoCardProps {
@@ -43,12 +42,11 @@ interface UnitInfoCardProps {
 
 export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: UnitInfoCardProps) {
   const {
-    label, status, unitTypeName, price, description, orientation,
+    label, status, price, description, orientation,
     area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
 
   const areaLabel = areaUnit === 'ft2' ? 'ft²' : areaUnit === 'ha' ? 'ha' : 'm²';
-  const areaSqft = area && areaUnit !== 'ft2' ? Math.round(area * M2_TO_SQFT * 100) / 100 : null;
 
   const priceFormatted = useMemo(() => {
     if (!price || price <= 0) return null;
@@ -56,7 +54,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
   }, [price]);
 
   const featureRows = useMemo(() => {
-    const rows: { icon: typeof Ruler; text: string }[] = [];
+    const rows: { icon: FeatureIconValue; text: string }[] = [];
 
     if (area && area > 0) {
       rows.push({ icon: Ruler, text: `Área Total ${area} ${areaLabel}` });
@@ -88,7 +86,7 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
     }
 
     return rows;
-  }, [area, areaLabel, areaSqft, bedrooms, bathrooms, hasBalcony, features]);
+  }, [area, areaLabel, bedrooms, bathrooms, hasBalcony, orientation, features]);
 
   return (
     <div className="w-[337px] flex-shrink-0 overflow-hidden" style={outerGlassStyle}>
@@ -117,15 +115,6 @@ export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: Un
           </div>
 
           <div className="flex items-baseline justify-between">
-            {unitTypeName ? (
-              <p
-                className="text-[18px] font-medium leading-[27px] capitalize truncate min-w-0 mr-[8px]"
-                title={`Modelo ${unitTypeName}`}
-                style={{ color: '#757474', fontFamily: poppins }}
-              >
-                Modelo {unitTypeName}
-              </p>
-            ) : <span />}
             {priceFormatted && (
               <span
                 className="text-[24px] font-semibold leading-[36px] uppercase flex-shrink-0 whitespace-nowrap"

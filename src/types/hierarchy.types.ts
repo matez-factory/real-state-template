@@ -190,6 +190,7 @@ export interface UnitType {
   projectId: string;
   name: string;
   slug?: string;
+  assetType?: string;
   area?: number;
   areaUnit?: string;
   bedrooms?: number;
@@ -198,6 +199,8 @@ export interface UnitType {
   hasBalcony?: boolean;
   orientation?: string;
   features?: FeatureItem[];
+  tourUrl?: string;
+  videoUrl?: string;
 }
 
 // ============================================================
