@@ -157,7 +157,6 @@ export function LotsExplorerView({
       history.pushState(null, '', `/${data.currentPath.join('/')}`);
     }
     if (section === 'home') {
-      setActiveView('map');
       navigate(homeUrl);
     } else if (section === 'map') {
       setActiveView('map');

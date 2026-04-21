@@ -160,7 +160,6 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
 
   const handleNavigate = (section: string) => {
     if (section === 'home') {
-      setActiveView('map');
       navigate(homeUrl);
     } else if (section === 'map') {
       setActiveView('map');
