@@ -308,9 +308,11 @@ export function buildExplorerPageData(
         if (layer.hasBalcony == null && ut.has_balcony != null) layer.hasBalcony = ut.has_balcony;
         if (layer.orientation == null && ut.orientation) layer.orientation = ut.orientation;
         if ((layer.features == null || layer.features.length === 0) && ut.features && ut.features.length > 0) layer.features = ut.features;
-        // tour_360_url and video_url inherit from unit_type when the unit itself has none
+        // Tour 360 y video URL: si la unidad no sobrescribe, heredar del tipo.
         if (!layer.tourEmbedUrl && ut.tour_360_url) layer.tourEmbedUrl = ut.tour_360_url;
         if (!layer.videoUrl && ut.video_url) layer.videoUrl = ut.video_url;
+        if (!layer.area && ut.area != null) layer.area = ut.area;
+        if (!layer.areaUnit && ut.area_unit) layer.areaUnit = ut.area_unit;
       }
     }
     return layer;
