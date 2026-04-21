@@ -5,7 +5,6 @@ import type { Layer, Media, Project } from '@/types/hierarchy.types';
 import { FadeImage } from '@/components/shared/FadeImage';
 import { UnitStatusBadge } from '@/components/unit/UnitStatusBadge';
 import { UnitInfoCard } from '@/components/unit/UnitInfoCard';
-import { UnitFeatureRow } from '@/components/unit/UnitFeatureRow';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
 import { ContactModal } from '@/components/navigation/ContactModal';

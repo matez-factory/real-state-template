@@ -42,7 +42,7 @@ interface UnitInfoCardProps {
 
 export function UnitInfoCard({ layer, thumbnailUrl, accentColor, onContact }: UnitInfoCardProps) {
   const {
-    label, status, price, description, orientation,
+    name, status, price, description, orientation,
     area, areaUnit, bedrooms, bathrooms, hasBalcony, features,
   } = layer;
 
