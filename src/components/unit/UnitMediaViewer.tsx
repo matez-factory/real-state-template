@@ -11,7 +11,7 @@ function getEmbedUrl(url: string): string {
   return url;
 }
 
-type MediaTab = 'gallery' | 'video' | 'tour';
+type MediaTab = 'planos' | 'galeria' | 'tour';
 
 interface UnitMediaViewerProps {
   activeTab: MediaTab;
@@ -53,7 +53,7 @@ export function UnitMediaViewer({
     }
   }, [next, prev]);
 
-  if (activeTab === 'gallery') {
+  if (activeTab === 'planos') {
     return (
       <div className="relative w-full h-full flex items-center justify-center">
         {galleryImages.length > 0 ? (
@@ -97,7 +97,7 @@ export function UnitMediaViewer({
     );
   }
 
-  if (activeTab === 'video') {
+  if (activeTab === 'galeria') {
     return (
       <div className="w-full h-full flex items-center justify-center">
         {videoUrl && (
