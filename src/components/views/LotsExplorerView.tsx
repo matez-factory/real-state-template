@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData, SiblingExplorerBundle } from '@/types/hierarchy.types';
-import { getHomeUrl, getBackUrl } from '@/lib/navigation';
+import { HOME_URL, getBackUrl } from '@/lib/navigation';
 import { InteractiveSVG } from '@/components/svg/InteractiveSVG';
 import { TopNav } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
@@ -148,7 +148,6 @@ export function LotsExplorerView({
     }, 300);
   }, [data.currentPath]);
 
-  const homeUrl = getHomeUrl(data);
   const backUrl = getBackUrl(data);
 
   const handleNavigate = (section: string) => {
@@ -157,7 +156,7 @@ export function LotsExplorerView({
       history.pushState(null, '', `/${data.currentPath.join('/')}`);
     }
     if (section === 'home') {
-      navigate(homeUrl);
+      navigate(HOME_URL);
     } else if (section === 'map') {
       setActiveView('map');
     } else if (section === 'location') {

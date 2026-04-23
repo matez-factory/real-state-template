@@ -51,7 +51,6 @@ export interface RawProject {
 
   has_video_intro: boolean;
   has_gallery: boolean;
-  has_360_tour: boolean;
   has_recorrido_360_embed: boolean;
   recorrido_360_embed_url: string | null;
   has_downloads: boolean;
@@ -155,7 +154,7 @@ export interface RawUnitType {
 // Transform functions
 // ============================================================
 
-export function transformProject(raw: RawProject): Project {
+export function transformProject(raw: RawProject, rawLayers: RawLayer[]): Project {
   return {
     id: raw.id,
     slug: raw.slug,
@@ -184,7 +183,7 @@ export function transformProject(raw: RawProject): Project {
     website: raw.website || undefined,
     hasVideoIntro: raw.has_video_intro ?? false,
     hasGallery: raw.has_gallery ?? false,
-    has360Tour: raw.has_360_tour ?? true,
+    has360Tour: rawLayers.some((l) => l.type === 'tour'),
     hasRecorrido360Embed: raw.has_recorrido_360_embed ?? false,
     recorrido360EmbedUrl: raw.recorrido_360_embed_url || undefined,
     hasDownloads: raw.has_downloads ?? false,
@@ -291,7 +290,7 @@ export function buildExplorerPageData(
   layerSlugs: string[],
   rawUnitTypes: RawUnitType[] = []
 ): ExplorerPageData {
-  const project = transformProject(rawProject);
+  const project = transformProject(rawProject, rawLayers);
 
   const unitTypeMap = new Map(rawUnitTypes.map(ut => [ut.id, ut]));
   const allLayers = rawLayers.map(raw => {

@@ -1,7 +1,7 @@
 import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData, Layer, SiblingExplorerBundle } from '@/types/hierarchy.types';
-import { getHomeUrl, getBackUrl } from '@/lib/navigation';
+import { HOME_URL, getBackUrl } from '@/lib/navigation';
 import { InteractiveSVG } from '@/components/svg/InteractiveSVG';
 import { SiblingNavigator } from '@/components/navigation/SiblingNavigator';
 import { TopNav, MobileTabIcon } from '@/components/navigation/TopNav';
@@ -155,12 +155,11 @@ export function ExplorerView({ data, siblingBundle }: ExplorerViewProps) {
     }
   }, [activeLayerId, siblingBundle, currentPath, navigate]);
 
-  const homeUrl = getHomeUrl(data);
-  const backUrl = project.type === 'building' ? homeUrl : getBackUrl(data);
+  const backUrl = project.type === 'building' ? HOME_URL : getBackUrl(data);
 
   const handleNavigate = (section: string) => {
     if (section === 'home') {
-      navigate(homeUrl);
+      navigate(HOME_URL);
     } else if (section === 'map') {
       setActiveView('map');
     } else if (section === 'location') {

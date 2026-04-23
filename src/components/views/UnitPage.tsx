@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
-import { getHomeUrl, getBackUrl } from '@/lib/navigation';
+import { HOME_URL, getBackUrl } from '@/lib/navigation';
 import { useIsMobilePortrait } from '@/hooks/useIsMobilePortrait';
 import { TopNav } from '@/components/navigation/TopNav';
 import { SocialButtons } from '@/components/navigation/SocialButtons';
@@ -39,7 +39,6 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const [planoIndex, setPlanoIndex] = useState(0);
   const [sheetExpanded, setSheetExpanded] = useState(false);
 
-  const homeUrl = getHomeUrl(data);
   const floorUrl = getBackUrl(data);
 
   const logos = useMemo(
@@ -164,7 +163,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
 
   const handleNavigate = useCallback((section: NavSection) => {
     if (section === 'home') {
-      navigate(homeUrl);
+      navigate(HOME_URL);
       return;
     }
     if (section === 'map') {
@@ -181,7 +180,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       setGalleryIndex(0);
       setPlanoIndex(0);
     }
-  }, [navigate, homeUrl, floorUrl]);
+  }, [navigate, floorUrl]);
 
   const galleryPrev = useCallback(() => {
     setGalleryIndex((i) => {
@@ -337,7 +336,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
           : () => navigate(floorUrl)
         }
         showHome={activeView === 'unit' && showMediaNavbar}
-        onHome={() => navigate(homeUrl)}
+        onHome={() => navigate(HOME_URL)}
         hideMobileNav={activeView === 'unit'}
         compact
       />
