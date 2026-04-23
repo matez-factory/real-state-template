@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
@@ -31,7 +31,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const { project, currentLayer, media } = data;
   const isMobilePortrait = useIsMobilePortrait();
 
-  const [mediaTab, setMediaTab] = useState<MediaTab>('gallery');
+  const [mediaTabPreference, setMediaTab] = useState<MediaTab>('gallery');
   const [activeView, setActiveView] = useState<ActiveView>('unit');
   const [contactOpen, setContactOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -88,7 +88,14 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     return u || undefined;
   }, [currentLayer?.tourEmbedUrl]);
   const hasTour = Boolean(tourEmbedUrl);
-  const hasAnyMedia = hasPlanos || hasGallery || hasVideo || hasTour;
+  /* Gallery y video comparten la pestaña "Galería", por eso cuentan como una sola sección. */
+  const mediaSectionCount =
+    (hasPlanos ? 1 : 0) +
+    ((hasGallery || hasVideo) ? 1 : 0) +
+    (hasTour ? 1 : 0);
+  /* Con una sola sección no hay navegación que hacer: se conserva la navbar principal
+   * y esa única media se renderiza de fondo. La de media solo aparece con 2+ secciones. */
+  const showMediaNavbar = mediaSectionCount >= 2;
 
   /* Sin assets *_mobile en portrait: contain = foto web entera; con mobile: cover. */
   const hasGalleryMobileAssets = useMemo(
@@ -114,7 +121,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       : 'object-cover portrait:object-cover';
 
   const navItems = useMemo<{ section: NavSection; label: string }[]>(() => {
-    if (!hasAnyMedia) {
+    if (!showMediaNavbar) {
       return [
         { section: 'home', label: 'Inicio' },
         { section: 'map', label: 'Plantas' },
@@ -126,7 +133,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     if (hasGallery || hasVideo) items.push({ section: 'galeria', label: 'Galería' });
     if (hasTour) items.push({ section: 'tour', label: 'Tour' });
     return items;
-  }, [hasAnyMedia, hasPlanos, hasGallery, hasVideo, hasTour]);
+  }, [showMediaNavbar, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const clampedGalleryIndex = useMemo(() => {
     const n = galleryImages.length;
@@ -140,17 +147,19 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     return Math.min(planoIndex, n - 1);
   }, [planoIndex, fichaImages.length]);
 
-  useEffect(() => {
-    if (!hasAnyMedia) return;
-    const currentTabHasContent =
-      (mediaTab === 'gallery' && hasPlanos) ||
-      (mediaTab === 'video' && (hasGallery || hasVideo)) ||
-      (mediaTab === 'tour' && hasTour);
-    if (currentTabHasContent) return;
-    if (hasPlanos) setMediaTab('gallery');
-    else if (hasGallery || hasVideo) setMediaTab('video');
-    else if (hasTour) setMediaTab('tour');
-  }, [mediaTab, hasAnyMedia, hasPlanos, hasGallery, hasVideo, hasTour]);
+  /* mediaTab es derivado: si la preferencia del usuario apunta a una tab sin
+   * contenido, cae al primer tab con media. Evita setState en effect. */
+  const mediaTab = useMemo<MediaTab>(() => {
+    const preferenceValid =
+      (mediaTabPreference === 'gallery' && hasPlanos) ||
+      (mediaTabPreference === 'video' && (hasGallery || hasVideo)) ||
+      (mediaTabPreference === 'tour' && hasTour);
+    if (preferenceValid) return mediaTabPreference;
+    if (hasPlanos) return 'gallery';
+    if (hasGallery || hasVideo) return 'video';
+    if (hasTour) return 'tour';
+    return mediaTabPreference;
+  }, [mediaTabPreference, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const handleNavigate = useCallback((section: NavSection) => {
     if (section === 'home') {
@@ -192,7 +201,11 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     });
   }, [galleryImages.length]);
 
-  const activeSection = activeView === 'location' ? 'location' as const : TAB_TO_SECTION[mediaTab];
+  const activeSection: NavSection = activeView === 'location'
+    ? 'location'
+    : showMediaNavbar
+      ? TAB_TO_SECTION[mediaTab]
+      : 'map';
 
   if (!currentLayer) return null;
 
@@ -214,19 +227,6 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
           alt=""
           className={`absolute inset-0 w-full h-full ${galleryFullBleedClass} transition-opacity duration-300`}
           key={galleryImages[clampedGalleryIndex]?.id ?? clampedGalleryIndex}
-        />
-      )}
-
-      {activeView === 'unit' && mediaTab === 'gallery' && !hasPlanos && (
-        <EmptyMediaMessage
-          title="Planos no disponibles"
-          subtitle="Cargá los planos de la unidad desde el panel de administración."
-        />
-      )}
-      {activeView === 'unit' && mediaTab === 'video' && !hasGallery && !hasVideo && (
-        <EmptyMediaMessage
-          title="Galería no disponible"
-          subtitle="Cargá imágenes o video de la unidad desde el panel de administración."
         />
       )}
 
@@ -331,13 +331,12 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
         onNavigate={handleNavigate}
         onContactOpen={() => setContactOpen(true)}
         navItems={navItems}
-        mapLabel="Planos"
         showBack
         onBack={activeView === 'location'
           ? () => setActiveView('unit')
           : () => navigate(floorUrl)
         }
-        showHome={activeView === 'unit'}
+        showHome={activeView === 'unit' && showMediaNavbar}
         onHome={() => navigate(homeUrl)}
         hideMobileNav={activeView === 'unit'}
         compact
@@ -370,17 +369,6 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       />
 
       <Disclaimer project={project} mobileBottomClass="bottom-[250px]" />
-    </div>
-  );
-}
-
-function EmptyMediaMessage({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none z-10 portrait:pb-[250px]">
-      <div className="max-w-md">
-        <p className="text-white/70 text-lg font-medium">{title}</p>
-        <p className="text-white/40 text-sm mt-2">{subtitle}</p>
-      </div>
     </div>
   );
 }
