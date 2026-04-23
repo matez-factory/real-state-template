@@ -56,6 +56,32 @@ function SplashRoute({ raw, onPlayIntro, preloadPhase, preloadProgress }: Splash
   return <BuildingSplashPage data={data} onPlayIntro={onPlayIntro} preloadPhase={preloadPhase} preloadProgress={preloadProgress} />;
 }
 
+// ─── Home route (/home) ────────────────────────────────────
+// Synthetic entry point for the "Inicio" navbar button.
+// Redirects to the tour layer when one exists; otherwise renders
+// LotsHomePage / ProjectHomePage with no tour data, so the user sees
+// the "Recorrido 360° no disponible" placeholder over the splash bg.
+
+function HomeRoute({ raw }: { raw: RawProjectData }) {
+  const tourLayer = useMemo(
+    () => raw.rawLayers.find((l) => l.type === 'tour'),
+    [raw.rawLayers]
+  );
+  const data = useMemo(
+    () => buildExplorerPageData(raw.rawProject, raw.rawLayers, raw.rawMedia, [], raw.rawUnitTypes),
+    [raw]
+  );
+
+  if (tourLayer) {
+    return <Navigate to={`/${tourLayer.slug}`} replace />;
+  }
+
+  if (data.project.type === 'lots') {
+    return <LotsHomePage data={data} hasSpinMedia={false} />;
+  }
+  return <ProjectHomePage data={data} hasSpinMedia={false} />;
+}
+
 // ─── Layer route (/*) ───────────────────────────────────────
 
 function LayerRoute({ raw }: { raw: RawProjectData }) {
@@ -324,6 +350,7 @@ export default function App() {
         {data ? (
           <>
             <Route path="/" element={<SplashRoute raw={data} onPlayIntro={handlePlayIntro} preloadPhase={phase} preloadProgress={progress} />} />
+            <Route path="/home" element={<HomeRoute raw={data} />} />
             <Route path="/*" element={<LayerRoute raw={data} />} />
           </>
         ) : (

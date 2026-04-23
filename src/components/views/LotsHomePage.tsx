@@ -38,6 +38,11 @@ export function LotsHomePage({ data, hasSpinMedia = true }: LotsHomePageProps) {
     [media]
   );
 
+  const splashBgUrl = useMemo(
+    () => media.find((m) => m.purpose === 'background' && m.type === 'image')?.url,
+    [media]
+  );
+
   const spinSvgs = useMemo(() => {
     const svgMedia = media.filter((m) => m.type === 'svg' && m.purpose === 'hotspot');
     const result: Record<string, string> = {};
@@ -142,12 +147,21 @@ export function LotsHomePage({ data, hasSpinMedia = true }: LotsHomePageProps) {
           />
         )}
         {activeView === 'tour' && !hasSpinMedia && (
-          <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
-            <div className="max-w-md">
-              <p className="text-white/70 text-lg font-medium">Recorrido 360° no disponible</p>
-              <p className="text-white/40 text-sm mt-2">Cargá el recorrido del proyecto desde el panel de administración para habilitar esta sección.</p>
+          splashBgUrl ? (
+            <img
+              src={splashBgUrl}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+              <div className="max-w-md">
+                <p className="text-white/90 text-lg font-medium">Contenido no disponible</p>
+                <p className="text-white/60 text-sm mt-2">Cargá el recorrido 360° o la imagen de fondo Inicio desde el panel de administración.</p>
+              </div>
             </div>
-          </div>
+          )
         )}
         {activeView === 'location' && <LocationView project={project} />}
       </div>
