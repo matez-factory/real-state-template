@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ExplorerPageData } from '@/types/hierarchy.types';
 import { getHomeUrl, getBackUrl } from '@/lib/navigation';
@@ -13,12 +13,13 @@ import { UnitMediaViewer } from '@/components/unit/UnitMediaViewer';
 import { GlassArrows } from '@/components/shared/GlassArrows';
 import { MobileUnitSheet } from '@/components/unit/MobileUnitSheet';
 
-type MediaTab = 'gallery' | 'video' | 'tour';
+type NavSection = 'home' | 'map' | 'location' | 'contact' | 'planos' | 'galeria' | 'tour';
+type MediaTab = Extract<NavSection, 'planos' | 'galeria' | 'tour'>;
 type ActiveView = 'unit' | 'location';
 
-type NavSection = 'home' | 'map' | 'location' | 'contact' | 'planos' | 'galeria' | 'tour';
-const TAB_TO_SECTION: Record<MediaTab, NavSection> = { gallery: 'planos', video: 'galeria', tour: 'tour' };
-const SECTION_TO_TAB: Record<string, MediaTab> = { planos: 'gallery', galeria: 'video', tour: 'tour' };
+function isMediaTab(section: NavSection): section is MediaTab {
+  return section === 'planos' || section === 'galeria' || section === 'tour';
+}
 
 
 interface UnitPageProps {
@@ -31,7 +32,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const { project, currentLayer, media } = data;
   const isMobilePortrait = useIsMobilePortrait();
 
-  const [mediaTab, setMediaTab] = useState<MediaTab>('gallery');
+  const [mediaTabPreference, setMediaTab] = useState<MediaTab>('planos');
   const [activeView, setActiveView] = useState<ActiveView>('unit');
   const [contactOpen, setContactOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -79,7 +80,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const thumbnailUrl = unitThumbnail ?? fichaImage ?? floorBackgroundUrl;
 
   const hasPlanos = fichaImages.length > 0;
-  const hasGallery = galleryImages.length > 0 || project.hasGallery;
+  const hasGallery = galleryImages.length > 0;
   const hasVideo = !!(currentLayer?.videoUrl) || uploadedVideos.length > 0;
   /** Embed Matterport/etc. viene del layer en LayerForm (`tour_embed_url`), no del flag global del proyecto:
    * `has_recorrido_360_embed` no se pasa al iframe y dejaba la pestaña Tour vacía. */
@@ -88,6 +89,14 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     return u || undefined;
   }, [currentLayer?.tourEmbedUrl]);
   const hasTour = Boolean(tourEmbedUrl);
+  /* Gallery y video comparten la pestaña "Galería", por eso cuentan como una sola sección. */
+  const mediaSectionCount =
+    (hasPlanos ? 1 : 0) +
+    ((hasGallery || hasVideo) ? 1 : 0) +
+    (hasTour ? 1 : 0);
+  /* Con una sola sección no hay navegación que hacer: se conserva la navbar principal
+   * y esa única media se renderiza de fondo. La de media solo aparece con 2+ secciones. */
+  const showMediaNavbar = mediaSectionCount >= 2;
 
   /* Sin assets *_mobile en portrait: contain = foto web entera; con mobile: cover. */
   const hasGalleryMobileAssets = useMemo(
@@ -112,13 +121,20 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       ? 'object-cover portrait:object-contain'
       : 'object-cover portrait:object-cover';
 
-  const navItems = useMemo(() => {
+  const navItems = useMemo<{ section: NavSection; label: string }[]>(() => {
+    if (!showMediaNavbar) {
+      return [
+        { section: 'home', label: 'Inicio' },
+        { section: 'map', label: 'Plantas' },
+        { section: 'location', label: 'Ubicación' },
+      ];
+    }
     const items: { section: NavSection; label: string }[] = [];
     if (hasPlanos) items.push({ section: 'planos', label: 'Planos' });
     if (hasGallery || hasVideo) items.push({ section: 'galeria', label: 'Galería' });
     if (hasTour) items.push({ section: 'tour', label: 'Tour' });
     return items;
-  }, [hasPlanos, hasGallery, hasVideo, hasTour]);
+  }, [showMediaNavbar, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const clampedGalleryIndex = useMemo(() => {
     const n = galleryImages.length;
@@ -132,22 +148,40 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     return Math.min(planoIndex, n - 1);
   }, [planoIndex, fichaImages.length]);
 
-  useEffect(() => {
-    if (mediaTab !== 'tour' || hasTour) return;
-    if (hasPlanos) setMediaTab('gallery');
-    else if (hasGallery || hasVideo) setMediaTab('video');
-    else setMediaTab('gallery');
-  }, [mediaTab, hasTour, hasPlanos, hasGallery, hasVideo]);
+  /* mediaTab es derivado: si la preferencia del usuario apunta a una tab sin
+   * contenido, cae al primer tab con media. Evita setState en effect. */
+  const mediaTab = useMemo<MediaTab>(() => {
+    const preferenceValid =
+      (mediaTabPreference === 'planos' && hasPlanos) ||
+      (mediaTabPreference === 'galeria' && (hasGallery || hasVideo)) ||
+      (mediaTabPreference === 'tour' && hasTour);
+    if (preferenceValid) return mediaTabPreference;
+    if (hasPlanos) return 'planos';
+    if (hasGallery || hasVideo) return 'galeria';
+    if (hasTour) return 'tour';
+    return mediaTabPreference;
+  }, [mediaTabPreference, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const handleNavigate = useCallback((section: NavSection) => {
-    const tab = SECTION_TO_TAB[section];
-    if (tab) {
+    if (section === 'home') {
+      navigate(homeUrl);
+      return;
+    }
+    if (section === 'map') {
+      navigate(floorUrl);
+      return;
+    }
+    if (section === 'location') {
+      setActiveView('location');
+      return;
+    }
+    if (isMediaTab(section)) {
       setActiveView('unit');
-      setMediaTab(tab);
+      setMediaTab(section);
       setGalleryIndex(0);
       setPlanoIndex(0);
     }
-  }, []);
+  }, [navigate, homeUrl, floorUrl]);
 
   const galleryPrev = useCallback(() => {
     setGalleryIndex((i) => {
@@ -167,7 +201,11 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     });
   }, [galleryImages.length]);
 
-  const activeSection = activeView === 'location' ? 'location' as const : TAB_TO_SECTION[mediaTab];
+  const activeSection: NavSection = activeView === 'location'
+    ? 'location'
+    : showMediaNavbar
+      ? mediaTab
+      : 'map';
 
   if (!currentLayer) return null;
 
@@ -175,7 +213,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   return (
     <div className="relative h-dvh overflow-hidden bg-[#2A2A2A]">
       {/* Background — full-bleed image changes per tab */}
-      {mediaTab === 'gallery' && fichaImages.length > 0 && (
+      {mediaTab === 'planos' && fichaImages.length > 0 && (
         <img
           src={fichaImages[clampedPlanoIndex]?.url}
           alt=""
@@ -183,7 +221,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
           key={fichaImages[clampedPlanoIndex]?.id ?? clampedPlanoIndex}
         />
       )}
-      {mediaTab === 'video' && galleryImages.length > 0 && (
+      {mediaTab === 'galeria' && galleryImages.length > 0 && (
         <img
           src={galleryImages[clampedGalleryIndex]?.url}
           alt=""
@@ -204,7 +242,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
             const endX = e.changedTouches[0].clientX;
             const dx = endX - startX;
             if (Math.abs(dx) < 50) return;
-            if (mediaTab === 'gallery' && fichaImages.length > 1) {
+            if (mediaTab === 'planos' && fichaImages.length > 1) {
               const n = fichaImages.length;
               if (dx < 0) {
                 setPlanoIndex((i) => {
@@ -217,7 +255,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
                   return (cur - 1 + n) % n;
                 });
               }
-            } else if (mediaTab === 'video' && galleryImages.length > 1) {
+            } else if (mediaTab === 'galeria' && galleryImages.length > 1) {
               if (dx < 0) galleryNext();
               else galleryPrev();
             }
@@ -254,7 +292,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       )}
 
       {/* Planos arrows + progress — fixed, outside swipe container */}
-      {activeView === 'unit' && mediaTab === 'gallery' && fichaImages.length > 1 && !sheetExpanded && (
+      {activeView === 'unit' && mediaTab === 'planos' && fichaImages.length > 1 && !sheetExpanded && (
         <GlassArrows
           onPrev={() => setPlanoIndex((i) => {
             const n = fichaImages.length;
@@ -276,7 +314,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       )}
 
       {/* Gallery arrows + progress — fixed, outside swipe container */}
-      {activeView === 'unit' && mediaTab === 'video' && galleryImages.length > 1 && !sheetExpanded && (
+      {activeView === 'unit' && mediaTab === 'galeria' && galleryImages.length > 1 && !sheetExpanded && (
         <GlassArrows
           onPrev={galleryPrev}
           onNext={galleryNext}
@@ -293,13 +331,12 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
         onNavigate={handleNavigate}
         onContactOpen={() => setContactOpen(true)}
         navItems={navItems}
-        mapLabel="Planos"
         showBack
         onBack={activeView === 'location'
           ? () => setActiveView('unit')
           : () => navigate(floorUrl)
         }
-        showHome={activeView === 'unit'}
+        showHome={activeView === 'unit' && showMediaNavbar}
         onHome={() => navigate(homeUrl)}
         hideMobileNav={activeView === 'unit'}
         compact
