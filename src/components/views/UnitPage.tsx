@@ -79,7 +79,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   const thumbnailUrl = unitThumbnail ?? fichaImage ?? floorBackgroundUrl;
 
   const hasPlanos = fichaImages.length > 0;
-  const hasGallery = galleryImages.length > 0 || project.hasGallery;
+  const hasGallery = galleryImages.length > 0;
   const hasVideo = !!(currentLayer?.videoUrl) || uploadedVideos.length > 0;
   /** Embed Matterport/etc. viene del layer en LayerForm (`tour_embed_url`), no del flag global del proyecto:
    * `has_recorrido_360_embed` no se pasa al iframe y dejaba la pestaña Tour vacía. */
