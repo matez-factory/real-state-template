@@ -88,6 +88,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
     return u || undefined;
   }, [currentLayer?.tourEmbedUrl]);
   const hasTour = Boolean(tourEmbedUrl);
+  const hasAnyMedia = hasPlanos || hasGallery || hasVideo || hasTour;
 
   /* Sin assets *_mobile en portrait: contain = foto web entera; con mobile: cover. */
   const hasGalleryMobileAssets = useMemo(
@@ -112,13 +113,20 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       ? 'object-cover portrait:object-contain'
       : 'object-cover portrait:object-cover';
 
-  const navItems = useMemo(() => {
+  const navItems = useMemo<{ section: NavSection; label: string }[]>(() => {
+    if (!hasAnyMedia) {
+      return [
+        { section: 'home', label: 'Inicio' },
+        { section: 'map', label: 'Plantas' },
+        { section: 'location', label: 'Ubicación' },
+      ];
+    }
     const items: { section: NavSection; label: string }[] = [];
     if (hasPlanos) items.push({ section: 'planos', label: 'Planos' });
     if (hasGallery || hasVideo) items.push({ section: 'galeria', label: 'Galería' });
     if (hasTour) items.push({ section: 'tour', label: 'Tour' });
     return items;
-  }, [hasPlanos, hasGallery, hasVideo, hasTour]);
+  }, [hasAnyMedia, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const clampedGalleryIndex = useMemo(() => {
     const n = galleryImages.length;
@@ -133,13 +141,30 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
   }, [planoIndex, fichaImages.length]);
 
   useEffect(() => {
-    if (mediaTab !== 'tour' || hasTour) return;
+    if (!hasAnyMedia) return;
+    const currentTabHasContent =
+      (mediaTab === 'gallery' && hasPlanos) ||
+      (mediaTab === 'video' && (hasGallery || hasVideo)) ||
+      (mediaTab === 'tour' && hasTour);
+    if (currentTabHasContent) return;
     if (hasPlanos) setMediaTab('gallery');
     else if (hasGallery || hasVideo) setMediaTab('video');
-    else setMediaTab('gallery');
-  }, [mediaTab, hasTour, hasPlanos, hasGallery, hasVideo]);
+    else if (hasTour) setMediaTab('tour');
+  }, [mediaTab, hasAnyMedia, hasPlanos, hasGallery, hasVideo, hasTour]);
 
   const handleNavigate = useCallback((section: NavSection) => {
+    if (section === 'home') {
+      navigate(homeUrl);
+      return;
+    }
+    if (section === 'map') {
+      navigate(floorUrl);
+      return;
+    }
+    if (section === 'location') {
+      setActiveView('location');
+      return;
+    }
     const tab = SECTION_TO_TAB[section];
     if (tab) {
       setActiveView('unit');
@@ -147,7 +172,7 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       setGalleryIndex(0);
       setPlanoIndex(0);
     }
-  }, []);
+  }, [navigate, homeUrl, floorUrl]);
 
   const galleryPrev = useCallback(() => {
     setGalleryIndex((i) => {
@@ -189,6 +214,19 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
           alt=""
           className={`absolute inset-0 w-full h-full ${galleryFullBleedClass} transition-opacity duration-300`}
           key={galleryImages[clampedGalleryIndex]?.id ?? clampedGalleryIndex}
+        />
+      )}
+
+      {activeView === 'unit' && mediaTab === 'gallery' && !hasPlanos && (
+        <EmptyMediaMessage
+          title="Planos no disponibles"
+          subtitle="Cargá los planos de la unidad desde el panel de administración."
+        />
+      )}
+      {activeView === 'unit' && mediaTab === 'video' && !hasGallery && !hasVideo && (
+        <EmptyMediaMessage
+          title="Galería no disponible"
+          subtitle="Cargá imágenes o video de la unidad desde el panel de administración."
         />
       )}
 
@@ -332,6 +370,17 @@ export function UnitPage({ data, floorBackgroundUrl }: UnitPageProps) {
       />
 
       <Disclaimer project={project} mobileBottomClass="bottom-[250px]" />
+    </div>
+  );
+}
+
+function EmptyMediaMessage({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center px-6 text-center pointer-events-none z-10 portrait:pb-[250px]">
+      <div className="max-w-md">
+        <p className="text-white/70 text-lg font-medium">{title}</p>
+        <p className="text-white/40 text-sm mt-2">{subtitle}</p>
+      </div>
     </div>
   );
 }

@@ -13,12 +13,13 @@ import { GlassArrows } from '@/components/shared/GlassArrows';
 
 interface ProjectHomePageProps {
   data: ExplorerPageData;
+  hasSpinMedia?: boolean;
 }
 
 type ActiveView = 'tour' | 'location';
 
 
-export function ProjectHomePage({ data }: ProjectHomePageProps) {
+export function ProjectHomePage({ data, hasSpinMedia = true }: ProjectHomePageProps) {
   const navigate = useNavigate();
   const { project, media, children, siblings } = data;
 
@@ -119,7 +120,7 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
   return (
     <div className="relative h-dvh overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
-        {activeView === 'tour' && (
+        {activeView === 'tour' && hasSpinMedia && (
           <Spin360Viewer
             ref={spinRef}
             media={media}
@@ -149,6 +150,14 @@ export function ProjectHomePage({ data }: ProjectHomePageProps) {
               );
             }}
           />
+        )}
+        {activeView === 'tour' && !hasSpinMedia && (
+          <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+            <div className="max-w-md">
+              <p className="text-white/70 text-lg font-medium">Recorrido 360° no disponible</p>
+              <p className="text-white/40 text-sm mt-2">Cargá el recorrido del proyecto desde el panel de administración para habilitar esta sección.</p>
+            </div>
+          </div>
         )}
         {activeView === 'location' && <LocationView project={project} />}
       </div>

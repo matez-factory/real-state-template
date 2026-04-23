@@ -119,15 +119,25 @@ export function UnitMediaViewer({
     );
   }
 
-  if (activeTab === 'tour' && tourEmbedUrl) {
+  if (activeTab === 'tour') {
+    if (tourEmbedUrl) {
+      return (
+        <div className="w-full h-full">
+          <iframe
+            src={getEmbedUrl(tourEmbedUrl)}
+            className="w-full h-full rounded-xl"
+            allow="xr-spatial-tracking; gyroscope; accelerometer"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
     return (
-      <div className="w-full h-full">
-        <iframe
-          src={getEmbedUrl(tourEmbedUrl)}
-          className="w-full h-full rounded-xl"
-          allow="xr-spatial-tracking; gyroscope; accelerometer"
-          allowFullScreen
-        />
+      <div className="w-full h-full flex items-center justify-center px-6 text-center">
+        <div className="max-w-md">
+          <p className="text-white/70 text-lg font-medium">Recorrido 360° no disponible</p>
+          <p className="text-white/40 text-sm mt-2">Cargá el embed del tour 360° de la unidad desde el panel de administración.</p>
+        </div>
       </div>
     );
   }

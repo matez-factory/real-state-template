@@ -85,13 +85,14 @@ function LayerRoute({ raw }: { raw: RawProjectData }) {
   const { current } = bundle;
 
   const hasSpinMedia = current.media.some((m) => m.purpose === 'hotspot');
+  const isHomeLayer = current.currentLayer?.type === 'tour' || hasSpinMedia;
 
-  if (current.project.type === 'lots' && hasSpinMedia) {
-    return <LotsHomePage data={current} />;
+  if (current.project.type === 'lots' && isHomeLayer) {
+    return <LotsHomePage data={current} hasSpinMedia={hasSpinMedia} />;
   }
 
-  if (current.project.type === 'building' && hasSpinMedia) {
-    return <ProjectHomePage data={current} />;
+  if (current.project.type === 'building' && isHomeLayer) {
+    return <ProjectHomePage data={current} hasSpinMedia={hasSpinMedia} />;
   }
 
   if (current.children.length === 0 && current.currentLayer && current.project.type === 'lots') {
@@ -128,18 +129,22 @@ function LayerRoute({ raw }: { raw: RawProjectData }) {
       return <ExplorerView data={current} siblingBundle={bundle} />;
     }
 
-    let floorBackgroundUrl: string | undefined;
-    if (layerSlugs.length > 1) {
-      try {
-        const parentBundle = buildSiblingExplorerBundle(
-          raw.rawProject, raw.rawLayers, raw.rawMedia, layerSlugs.slice(0, -1), raw.rawUnitTypes
-        );
-        floorBackgroundUrl = parentBundle.current.media.find(
-          (m) => m.purpose === 'background' && m.type === 'image'
-        )?.url;
-      } catch { /* no parent bg */ }
+    if (layerType === 'unit') {
+      let floorBackgroundUrl: string | undefined;
+      if (layerSlugs.length > 1) {
+        try {
+          const parentBundle = buildSiblingExplorerBundle(
+            raw.rawProject, raw.rawLayers, raw.rawMedia, layerSlugs.slice(0, -1), raw.rawUnitTypes
+          );
+          floorBackgroundUrl = parentBundle.current.media.find(
+            (m) => m.purpose === 'background' && m.type === 'image'
+          )?.url;
+        } catch { /* no parent bg */ }
+      }
+      return <UnitPage data={current} floorBackgroundUrl={floorBackgroundUrl} />;
     }
-    return <UnitPage data={current} floorBackgroundUrl={floorBackgroundUrl} />;
+
+    return <Navigate to="/" replace />;
   }
 
   return <ExplorerView data={current} siblingBundle={bundle} />;
