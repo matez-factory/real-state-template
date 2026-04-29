@@ -123,10 +123,17 @@ export function SiblingNavigator({
 
   return (
     <aside
-      className="hidden landscape:flex absolute left-[clamp(10px,3vw,47px)] top-[clamp(50px,14vh,116px)] z-40 flex-col rounded-[clamp(10px,3vh,20px)] w-[clamp(68px,10vw,114px)] overflow-hidden"
+      className="hidden landscape:flex absolute left-[clamp(10px,3vw,47px)] top-[clamp(50px,14vh,116px)] z-40 flex-col items-stretch w-[clamp(68px,10vw,114px)]"
       style={{
-        height: 'calc(100dvh - clamp(60px,15vh,116px) - clamp(20px,5vh,48px))',
-        maxHeight: '614px',
+        bottom: 'clamp(20px,5vh,48px)',
+        justifyContent: 'flex-start',
+        paddingTop: 'clamp(20px,6vh,80px)',
+      }}
+    >
+    <div
+      className="flex flex-col rounded-[clamp(10px,3vh,20px)] overflow-hidden"
+      style={{
+        maxHeight: 'min(614px, 100%)',
         background: 'rgba(214, 214, 214, 0.45)',
         backgroundBlendMode: 'luminosity',
         backdropFilter: 'blur(50px)',
@@ -173,7 +180,7 @@ export function SiblingNavigator({
       </div>
 
       {/* Number list area + scrollbar */}
-      <div className="relative flex-1 min-h-0 flex pb-[clamp(6px,2vh,20px)] pr-[clamp(6px,1vw,20px)] pl-[clamp(8px,1.5vw,25px)] gap-[clamp(4px,0.8vw,12px)]">
+      <div className="relative flex-1 min-h-0 flex pb-[clamp(6px,2vh,20px)] pr-[clamp(6px,1vw,20px)] pl-[clamp(8px,1.5vw,25px)] gap-[clamp(4px,0.8vw,12px)] items-stretch">
         {/* White background for number list — single scrollable container */}
         <div
           ref={scrollRef}
@@ -242,6 +249,7 @@ export function SiblingNavigator({
           </div>
         </div>
       </div>
+    </div>
     </aside>
   );
 }
